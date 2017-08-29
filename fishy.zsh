@@ -249,7 +249,7 @@ _fishy_collapsed_wd() {
     }; s|^$ENV{HOME}|~|g; s|/([^/.])[^/]*(?=/)|/$1|g; s|/\.([^/])[^/]*(?=/)|/.$1|g')
 }
 
-local user_color='cyan'; [ $UID -eq 0 ] && user_color='red';
+user_color='cyan'; [ $UID -eq 0 ] && user_color='red';
 PROMPT='%{$fg[$user_color]%}%n %{$fg_no_bold[white]%}$(_fishy_collapsed_wd)%{$reset_color%}%(!.#.>) '
 PROMPT2='%{$fg[red]%}\ %{$reset_color%}'
 
@@ -264,7 +264,7 @@ if ! typeset -f battery_level_gauge >/dev/null; then
   local battery_level_gauge () {}
 fi
 
-local return_status="%{$fg_bold[red]%}%(?..%?)%{$reset_color%}"
+return_status="%{$fg_bold[red]%}%(?..%?)%{$reset_color%}"
 RPROMPT='${return_status}%{$reset_color%}$(git_prompt_info)$(git_prompt_status)%{$reset_color%}$(battery_level_gauge)%{$reset_color%}'
 
 zstyle ':completion:*' special-dirs true
