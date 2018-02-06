@@ -6,6 +6,7 @@ cut out. Loads much faster.
 Also includes a battery gauge and git display that can be added to the right
 prompt.
 
+![Screenshot](theme.png)
 
 ## Installation 
 
