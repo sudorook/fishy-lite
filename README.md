@@ -3,8 +3,17 @@
 Fork of the fishy theme found in oh-my-zsh, with much of the extraneous stuff
 cut out. Loads much faster.
 
-Also includes a battery gauge and git display that can be added to the right
-prompt.
+Also includes a battery gauge and git display that can be enabled on the
+right-hand side of the prompt.
+
+What's removed from oh-my-zsh:
+
+1. Bazaar integration
+2. Non-git prompts (RVM, NVM, Mercurial, etc.)
+
+The exclusions speed up zsh load times from unbearable (default oh-my-zsh) to
+tolerable on underpowered hardware, such as SoC devices, very old computers,
+etc.
 
 ![Screenshot](theme.png)
 
