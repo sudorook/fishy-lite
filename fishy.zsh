@@ -14,7 +14,7 @@ autoload -U compaudit compinit
 
 
 #
-# from lib/completions.zsh
+# from lib/completion.zsh
 #
 
 # fixme - the load process here seems a bit bizarre
@@ -59,7 +59,6 @@ zstyle ':completion:*:cd:*' tag-order local-directories directory-stack path-dir
 # Use caching so that commands like apt and dpkg complete are useable
 zstyle ':completion::complete:*' use-cache 1
 zstyle ':completion::complete:*' cache-path $ZSH_CACHE_DIR
-
 
 # Don't complete uninteresting users
 zstyle ':completion:*:*:*:users' ignored-patterns \
@@ -263,7 +262,7 @@ fi
 
 # only define LC_CTYPE if undefined
 if [[ -z "$LC_CTYPE" && -z "$LC_ALL" ]]; then
-        export LC_CTYPE=${LANG%%:*} # pick the first entry from LANG
+  export LC_CTYPE=${LANG%%:*} # pick the first entry from LANG
 fi
 
 # recognize comments
@@ -384,6 +383,31 @@ function omz_termsupport_preexec {
 precmd_functions+=(omz_termsupport_precmd)
 preexec_functions+=(omz_termsupport_preexec)
 
+# Keep Apple Terminal.app's current working directory updated
+# Based on this answer: http://superuser.com/a/315029
+# With extra fixes to handle multibyte chars and non-UTF-8 locales
+
+if [[ "$TERM_PROGRAM" == "Apple_Terminal" ]] && [[ -z "$INSIDE_EMACS" ]]; then
+  # Emits the control sequence to notify Terminal.app of the cwd
+  # Identifies the directory using a file: URI scheme, including
+  # the host name to disambiguate local vs. remote paths.
+  function update_terminalapp_cwd() {
+    emulate -L zsh
+
+    # Percent-encode the pathname.
+    local URL_PATH="$(omz_urlencode -P $PWD)"
+    [[ $? != 0 ]] && return 1
+
+    # Undocumented Terminal.app-specific control sequence
+    printf '\e]7;%s\a' "file://$HOST$URL_PATH"
+  }
+
+  # Use a precmd hook instead of a chpwd hook to avoid contaminating output
+  precmd_functions+=(update_terminalapp_cwd)
+  # Run once to get initial cwd set
+  update_terminalapp_cwd
+fi
+
 
 #
 # from lib/theme-and-appearance.zsh
@@ -449,6 +473,7 @@ ZSH_THEME_GIT_PROMPT_CLEAN=""               # Text to display if the branch is c
 # Zsh theme emulating the Fish shell's default prompt. Identical to one
 # provided in oh-my-zsh, except: 
 #  - remove 'local' from setting colors
+#  - only display 'user ~>', not 'user@host ~>' in the prompt
 #  - add git prompt to RPROMPT
 #  - add battery gauge to RPROMPT
 #
