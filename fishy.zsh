@@ -487,7 +487,7 @@ _fishy_collapsed_wd() {
 }
 
 user_color='cyan'; [ $UID -eq 0 ] && user_color='red';
-PROMPT='%{$fg[$user_color]%}%n %{$fg_no_bold[white]%}$(_fishy_collapsed_wd)%{$reset_color%}%(!.#.>) '
+PROMPT='%{$fg[$user_color]%}%n %{$reset_color%}$(_fishy_collapsed_wd)%(!.#.>) '
 PROMPT2='%{$fg[red]%}\ %{$reset_color%}'
 
 # add empty copies of functions defined in battery-gauge.zsh and git-prompt.zsh
