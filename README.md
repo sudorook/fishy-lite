@@ -1,4 +1,4 @@
-# zsh themes
+# fishy-lite
 
 Fork of the fishy theme found in oh-my-zsh, with much of the extraneous stuff
 cut out. Loads much faster.
@@ -23,7 +23,7 @@ etc.
 
 Clone this repo and source fishy.zsh in your zshrc, e.g.:
 ```
-source /path/to/zsh-themes/fishy.zsh
+source /path/to/fishy-lite/fishy.zsh
 ```
 
 To enable the battery gauge or git prompt, source battery-gauge.zsh and
@@ -35,11 +35,11 @@ git-prompt.zsh, respectively.
 Antigen compatibility is provided by the symlinks in the plugins/ and themes/
 directories. Add the following to your zshrc to enable the custom fishy theme:
 ```
-antigen theme pseudorook/zsh-themes themes/fishy
+antigen theme pseudorook/fishy-lite themes/fishy
 ```
 
 To add the battery gauge and git prompt:
 ```
-antigen bundle pseudorook/zsh-themes plugins/git
-antigen bundle pseudorook/zsh-themes plugins/battery
+antigen bundle pseudorook/fishy-lite plugins/git
+antigen bundle pseudorook/fishy-lite plugins/battery
 ```
