@@ -26,8 +26,12 @@ Clone this repo and source fishy.zsh in your zshrc, e.g.:
 source /path/to/fishy-lite/fishy.zsh
 ```
 
-To enable the battery gauge or git prompt, source battery-gauge.zsh and
-git-prompt.zsh, respectively.
+To enable the battery gauge or git prompt, source the battery-gauge.zsh and
+git-prompt.zsh files, respectively.
+```
+source /path/to/fishy-lite/battery-gauge.zsh
+source /path/to/fishy-lite/git-prompt.zsh
+```
 
 
 ### Antigen
