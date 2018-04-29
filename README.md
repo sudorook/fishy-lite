@@ -39,11 +39,11 @@ source /path/to/fishy-lite/git-prompt.zsh
 Antigen compatibility is provided by the symlinks in the plugins/ and themes/
 directories. Add the following to your zshrc to enable the custom fishy theme:
 ```
-antigen theme pseudorook/fishy-lite themes/fishy
+antigen theme sudorook/fishy-lite themes/fishy
 ```
 
 To add the battery gauge and git prompt:
 ```
-antigen bundle pseudorook/fishy-lite plugins/git
-antigen bundle pseudorook/fishy-lite plugins/battery
+antigen bundle sudorook/fishy-lite plugins/git
+antigen bundle sudorook/fishy-lite plugins/battery
 ```
