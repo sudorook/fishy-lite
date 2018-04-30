@@ -3,7 +3,7 @@
 Fork of the fishy theme found in oh-my-zsh, with much of the extraneous stuff
 cut out. Loads much faster.
 
-Also includes a battery gauge and git display that can be enabled on the
+Also includes battery gauges and git display that can be enabled on the
 right-hand side of the prompt.
 
 What's removed from oh-my-zsh:
@@ -35,7 +35,6 @@ source /path/to/fishy-lite/battery-gauge.zsh
 source /path/to/fishy-lite/git-prompt.zsh
 ```
 
-
 ### Antigen
 
 Antigen compatibility is provided by the symlinks in the plugins/ and themes/
@@ -49,3 +48,23 @@ To add the battery gauge and git prompt:
 antigen bundle sudorook/fishy-lite plugins/git
 antigen bundle sudorook/fishy-lite plugins/battery
 ```
+
+
+## Options
+
+The theme comes with the option of three different battery prompts.
+
+### Level gauge
+
+![Level gauge screenshot](assets/level.png)
+
+### Circle gauge
+
+![Circle gauge screenshot](assets/circle.png)
+
+### Percentage gauge
+
+![Percentage screenshot](assets/percent.png)
+
+To select one, open the fishy.zsh file and go to the bottom (line ~515).
+Uncomment the RPROMPT that corresponds to the battery gauge you want.

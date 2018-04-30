@@ -490,7 +490,7 @@ user_color='cyan'; [ $UID -eq 0 ] && user_color='red';
 PROMPT='%{$fg[$user_color]%}%n %{$reset_color%}$(_fishy_collapsed_wd)%(!.#.>) '
 PROMPT2='%{$fg[red]%}\ %{$reset_color%}'
 
-# add empty copies of functions defined in battery-gauge.zsh and git-prompt.zsh
+# Add empty copies of functions defined in battery-gauge.zsh and git-prompt.zsh
 # if their definitions aren't sourced.
 if ! typeset -f git_prompt_info >/dev/null && \
    ! typeset -f git_prompt_status >/dev/null; then
@@ -500,9 +500,23 @@ fi
 if ! typeset -f battery_level_gauge >/dev/null; then
   local battery_level_gauge () {}
 fi
+if ! typeset -f battery_level_circlegauge >/dev/null; then
+  local battery_level_circlegauge () {}
+fi
+if ! typeset -f battery_pct_prompt >/dev/null; then
+  local battery_pct_prompt () {}
+fi
 
 return_status="%{$fg_bold[red]%}%(?..%?)%{$reset_color%}"
+
+# Uncomment one of the three RPROMPTS based on the battery gauge you want
+# displayed.
+#  1. bar (■■◩--)
+#  2. circle (◑)
+#  3. percent (55%)
 RPROMPT='${return_status}%{$reset_color%}$(git_prompt_info)$(git_prompt_status)%{$reset_color%}$(battery_level_gauge)%{$reset_color%}'
+# RPROMPT='${return_status}%{$reset_color%}$(git_prompt_info)$(git_prompt_status)%{$reset_color%}$(battery_level_circlegauge)%{$reset_color%}'
+# RPROMPT='${return_status}%{$reset_color%}$(git_prompt_info)$(git_prompt_status)%{$reset_color%}$(battery_pct_prompt)%{$reset_color%}'
 
 ZSH_THEME_GIT_PROMPT_PREFIX=" "
 ZSH_THEME_GIT_PROMPT_SUFFIX=""
