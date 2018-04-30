@@ -11,11 +11,13 @@ What's removed from oh-my-zsh:
 1. Bazaar integration
 2. Non-git prompts (RVM, NVM, Mercurial, etc.)
 
-The exclusions speed up zsh load times from unbearable (default oh-my-zsh) to
-tolerable on underpowered hardware, such as SoC devices, very old computers,
-etc.
+The theme also combines all the relevant oh-my-zsh lib/ files into a single
+one. That, along with the excluses, speed up zsh load times from unbearable
+(default oh-my-zsh) to tolerable on underpowered hardware, such as SoC devices,
+very old computers, etc.
 
-![Screenshot](theme.png)
+![Screenshot](assets/theme.png)
+
 
 ## Installation 
 
