@@ -53,7 +53,7 @@ function battery_level_gauge() {
   local battery_prefix=${BATTERY_GAUGE_PREFIX:-''};
   local battery_suffix=${BATTERY_GAUGE_SUFFIX:-''};
   local filled_symbol=${BATTERY_GAUGE_FILLED_SYMBOL:-'■'};
-  local half_symbol=${BATTERY_GAUGE_FILLED_SYMBOL:-'◩'};
+  local half_symbol=${BATTERY_GAUGE_HALF_SYMBOL:-'◩'};
   local empty_symbol=${BATTERY_GAUGE_EMPTY_SYMBOL:-'-'};
   local charging_color=${BATTERY_CHARGING_COLOR:-$color_yellow};
   local charging_symbol=${BATTERY_CHARGING_SYMBOL:-'⚡'};
