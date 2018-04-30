@@ -27,8 +27,13 @@ function battery_time_remaining() {
 }
 
 function battery_pct_prompt() {
-  b=$(battery_pct_remaining)
-  if [[ $(acpi 2>/dev/null | grep -c '^Battery.*Discharging') -gt 0 ]] ; then
+  local charging_color=${BATTERY_CHARGING_COLOR:-$color_yellow};
+  local charging_symbol=${BATTERY_CHARGING_SYMBOL:-'⚡'};
+
+  local b=$(battery_pct_remaining)
+  local charging='' && battery_is_charging && charging=$charging_symbol;
+
+  if [[ $b =~ [0-9]+ ]]; then
     if [ $b -gt 50 ] ; then
       color='green'
     elif [ $b -gt 20 ] ; then
@@ -36,7 +41,7 @@ function battery_pct_prompt() {
     else
       color='red'
     fi
-    echo "%{$fg[$color]%}$(battery_pct_remaining)%%%{$reset_color%}"
+    echo " %{$fg[$color]%}$(battery_pct_remaining)%%%{$reset_color%}%{${charging_color%}%}$charging%{$reset_color%}"
   else
     echo "∞"
   fi
