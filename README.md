@@ -68,3 +68,6 @@ The theme comes with the option of three different battery prompts.
 
 To select one, open the fishy.zsh file and go to the bottom (line ~515).
 Uncomment the RPROMPT that corresponds to the battery gauge you want.
+
+**NOTE:** For the battery gauges to work, you'll need to have acpi installed
+and be using a terminal that supports UTF-8 characters.
