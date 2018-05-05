@@ -12,7 +12,7 @@ What's removed from oh-my-zsh:
 2. Non-git prompts (RVM, NVM, Mercurial, etc.)
 
 The theme also combines all the relevant oh-my-zsh lib/ files into a single
-one. That, along with the excluses, speed up zsh load times from unbearable
+one. That, along with the exclusions, speeds up zsh load times from unbearable
 (default oh-my-zsh) to tolerable on underpowered hardware, such as SoC devices,
 very old computers, etc.
 
