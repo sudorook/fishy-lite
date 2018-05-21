@@ -506,17 +506,13 @@ fi
 if ! typeset -f battery_pct_prompt >/dev/null; then
   local battery_pct_prompt () {}
 fi
+if ! typeset -f battery_charging >/dev/null; then
+  local battery_charging () {}
+fi
 
 return_status="%{$fg_bold[red]%}%(?..%?)%{$reset_color%}"
 
-# Uncomment one of the three RPROMPTS based on the battery gauge you want
-# displayed.
-#  1. bar (■■◩--)
-#  2. circle (◑)
-#  3. percent (55%)
-RPROMPT='${return_status}%{$reset_color%}$(git_prompt_info)$(git_prompt_status)%{$reset_color%}$(battery_level_gauge)%{$reset_color%}'
-# RPROMPT='${return_status}%{$reset_color%}$(git_prompt_info)$(git_prompt_status)%{$reset_color%}$(battery_level_circlegauge)%{$reset_color%}'
-# RPROMPT='${return_status}%{$reset_color%}$(git_prompt_info)$(git_prompt_status)%{$reset_color%}$(battery_pct_prompt)%{$reset_color%}'
+RPROMPT='${return_status}%{$reset_color%}$(git_prompt_info)$(git_prompt_status)%{$reset_color%}$(battery_level_gauge)$(battery_level_circlegauge)$(battery_pct_prompt)$(battery_charging)%{$reset_color%}'
 
 ZSH_THEME_GIT_PROMPT_PREFIX=" "
 ZSH_THEME_GIT_PROMPT_SUFFIX=""

@@ -50,24 +50,53 @@ antigen bundle sudorook/fishy-lite plugins/battery
 ```
 
 
-## Options
+## Extras
 
-The theme comes with the option of three different battery prompts.
+The theme comes with the option of three different battery prompts. All three
+can be enabled simultaneously, and to enable one, edit your zshrc as follows:
 
-### Level gauge
+### Bar gauge (default)
 
-![Level gauge screenshot](assets/level.png)
+![Level gauge screenshot](assets/bar.png)
+
+#### Manual
+```
+source /path/to/fishy-lite/battery/bar.zsh
+```
+
+#### Antigen
+```
+antigen bundle sudorook/fishy-lite plugins/battery-bar
+```
 
 ### Circle gauge
 
 ![Circle gauge screenshot](assets/circle.png)
 
+#### Manual
+```
+source /path/to/fishy-lite/battery/circle.zsh
+```
+
+#### Antigen
+```
+antigen bundle sudorook/fishy-lite plugins/battery-circle
+```
+
+
 ### Percentage gauge
 
 ![Percentage screenshot](assets/percent.png)
 
-To select one, open the fishy.zsh file and go to the bottom (line ~515).
-Uncomment the RPROMPT that corresponds to the battery gauge you want.
+#### Manual
+```
+source /path/to/fishy-lite/battery/percent.zsh
+```
+
+#### Antigen
+```
+antigen bundle sudorook/fishy-lite plugins/battery-percent
+```
 
 **NOTE:** For the battery gauges to work, you'll need to have acpi installed
 and be using a terminal that supports UTF-8 characters.
