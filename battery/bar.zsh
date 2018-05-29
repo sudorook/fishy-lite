@@ -9,7 +9,12 @@ function battery_is_charging() {
 function battery_charging() {
   local yellow_threshold=${BATTERY_YELLOW_THRESHOLD:-1};
   local charging_color=${BATTERY_CHARGING_COLOR:-$color_yellow};
-  local charging_symbol=${BATTERY_CHARGING_SYMBOL:-'⚡'};
+
+  if [[ $battery_remaining_percentage =~ [0-9]+ ]]; then
+    local charging_symbol=${BATTERY_CHARGING_SYMBOL:-'⚡'};
+  else
+    charging_symbol=${BATTERY_CHARGING_SYMBOL:-''};
+  fi
 
   local charging='' && battery_is_charging && charging=$charging_symbol;
 
