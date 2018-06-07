@@ -27,8 +27,6 @@ function battery_level_circlegauge() {
   local color_yellow=${BATTERY_COLOR_YELLOW:-%F{yellow}};
   local color_red=${BATTERY_COLOR_RED:-%F{red}};
   local color_reset=${BATTERY_COLOR_RESET:-%{%f%k%b%}};
-  local battery_prefix=${BATTERY_GAUGE_PREFIX:-''};
-  local battery_suffix=${BATTERY_GAUGE_SUFFIX:-''};
   local filled_symbol=${BATTERY_GAUGE_FILLED_SYMBOL:-'●'};
   local threefourths_symbol=${BATTERY_GAUGE_THREEFOURTHS_SYMBOL:-'◕'};
   local half_symbol=${BATTERY_GAUGE_HALF_SYMBOL:-'◑'};
@@ -61,6 +59,5 @@ function battery_level_circlegauge() {
     circlegauge=${BATTERY_UNKNOWN_SYMBOL:-''};
   fi
 
-  printf ' '${battery_prefix//\%/\%\%}${gauge_color//\%/\%\%}$circlegauge
-  printf ${color_reset//\%/\%\%}${battery_suffix//\%/\%\%}${color_reset//\%/\%\%}
+  printf ' '${gauge_color//\%/\%\%}$circlegauge${color_reset//\%/\%\%}
 }
