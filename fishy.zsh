@@ -488,7 +488,7 @@ ZSH_THEME_GIT_PROMPT_CLEAN=""               # Text to display if the branch is c
 
 #
 # Zsh theme emulating the Fish shell's default prompt. Identical to one
-# provided in oh-my-zsh, except: 
+# provided in oh-my-zsh, except:
 #  - remove 'local' from setting colors
 #  - only display 'user ~>', not 'user@host ~>' in the prompt
 #  - add git prompt to RPROMPT
