@@ -31,6 +31,7 @@ fi
 
 function battery_charging() {
   local color_yellow=${BATTERY_COLOR_YELLOW:-%F{yellow}};
+  local color_reset=${BATTERY_COLOR_RESET:-%{%f%k%b%}};
   local charging_color=${BATTERY_CHARGING_COLOR:-$color_yellow};
   local charging_symbol=${BATTERY_CHARGING_SYMBOL:-'⚡'};
 
