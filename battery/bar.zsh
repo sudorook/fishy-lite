@@ -34,7 +34,7 @@ function battery_charging() {
   local charging_color=${BATTERY_CHARGING_COLOR:-$color_yellow};
   local charging_symbol=${BATTERY_CHARGING_SYMBOL:-'⚡'};
 
-  local charging='' && battery_is_charging && charging=${charging_symbol};
+  local charging='' && battery_is_charging && [[ $(battery_pct) =~ [0-9]+ ]] && charging=${charging_symbol};
 
   printf ${charging_color//\%/\%\%}$charging${color_reset//\%/\%\%}
 }
