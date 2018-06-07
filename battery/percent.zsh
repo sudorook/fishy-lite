@@ -23,13 +23,7 @@ function battery_pct() {
 }
 
 function battery_pct_prompt() {
-  # local charging_color=${BATTERY_CHARGING_COLOR:-$color_yellow};
-  # local charging_symbol=${BATTERY_CHARGING_SYMBOL:-'⚡'};
-
   local b=$(battery_pct)
-  # local b=$(battery_pct_remaining)
-  # local charging='' && battery_is_charging && charging=$charging_symbol;
-
   if [[ $b =~ [0-9]+ ]]; then
     if [ $b -gt 50 ] ; then
       color='green'
@@ -38,7 +32,6 @@ function battery_pct_prompt() {
     else
       color='red'
     fi
-    # echo " %{$fg[$color]%}$(battery_pct_remaining)%%%{$reset_color%}%{${charging_color%}%}$charging%{$reset_color%}"
     echo " %{$fg[$color]%}$(battery_pct)%%%{$reset_color%}"
   else
     echo "∞"
