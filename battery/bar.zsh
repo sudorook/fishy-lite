@@ -48,9 +48,10 @@ function battery_level_gauge() {
   local color_yellow=${BATTERY_COLOR_YELLOW:-%F{yellow}};
   local color_red=${BATTERY_COLOR_RED:-%F{red}};
   local color_reset=${BATTERY_COLOR_RESET:-%{%f%k%b%}};
-  local filled_symbol=${BATTERY_GAUGE_FILLED_SYMBOL:-'■'};
-  local half_symbol=${BATTERY_GAUGE_HALF_SYMBOL:-'◩'};
-  local empty_symbol=${BATTERY_GAUGE_EMPTY_SYMBOL:-'-'};
+
+  local filled_symbol=${BATTERY_GAUGE_FILLED_SYMBOL:-'█'};
+  local half_symbol=${BATTERY_GAUGE_HALF_SYMBOL:-'▓'};
+  local empty_symbol=${BATTERY_GAUGE_EMPTY_SYMBOL:-'░'};
 
   local battery_remaining_percentage=$(battery_pct);
 
