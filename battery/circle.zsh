@@ -45,6 +45,7 @@ function battery_level_circlegauge() {
   local color_yellow=${BATTERY_COLOR_YELLOW:-%F{yellow}};
   local color_red=${BATTERY_COLOR_RED:-%F{red}};
   local color_reset=${BATTERY_COLOR_RESET:-%{%f%k%b%}};
+
   local filled_symbol=${BATTERY_GAUGE_FILLED_SYMBOL:-'●'};
   local threefourths_symbol=${BATTERY_GAUGE_THREEFOURTHS_SYMBOL:-'◕'};
   local half_symbol=${BATTERY_GAUGE_HALF_SYMBOL:-'◑'};
