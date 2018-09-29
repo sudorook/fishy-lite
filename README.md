@@ -18,6 +18,8 @@ very old computers, etc.
 
 ![Screenshot](assets/theme.png)
 
+**Note:** Screenshots are of GNOME terminal with Ubuntu Mono Regular, 14pt.
+
 
 ## Installation 
 
