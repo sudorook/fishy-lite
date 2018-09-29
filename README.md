@@ -59,6 +59,8 @@ can be enabled simultaneously, and to enable one, edit your zshrc as follows:
 
 ![Level gauge screenshot](assets/bar.png)
 
+Works on command line TTYs (i.e. no display server).
+
 #### Manual
 ```
 source /path/to/fishy-lite/battery/bar.zsh
@@ -72,6 +74,8 @@ antigen bundle sudorook/fishy-lite plugins/battery-bar
 ### Block gauge
 
 ![Block gauge screenshot](assets/block.png)
+
+Works on command line TTYs (i.e. no display server).
 
 #### Manual
 ```
@@ -101,6 +105,8 @@ antigen bundle sudorook/fishy-lite plugins/battery-circle
 ### Percentage gauge
 
 ![Percentage screenshot](assets/percent.png)
+
+Works on command line TTYs (i.e. no display server).
 
 #### Manual
 ```
