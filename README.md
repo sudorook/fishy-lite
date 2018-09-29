@@ -69,6 +69,20 @@ source /path/to/fishy-lite/battery/bar.zsh
 antigen bundle sudorook/fishy-lite plugins/battery-bar
 ```
 
+### Block gauge
+
+![Block gauge screenshot](assets/block.png)
+
+#### Manual
+```
+source /path/to/fishy-lite/battery/block.zsh
+```
+
+#### Antigen
+```
+antigen bundle sudorook/fishy-lite plugins/battery-block
+```
+
 ### Circle gauge
 
 ![Circle gauge screenshot](assets/circle.png)
