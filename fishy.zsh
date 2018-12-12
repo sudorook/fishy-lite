@@ -129,8 +129,7 @@ unfunction grep-flag-available
 
 ## History wrapper
 function omz_history {
-  # Delete the history file if `-c' argument provided.
-  # This won't affect the `history' command output until the next login.
+  local clear list
   zparseopts -E c=clear l=list
 
   if [[ -n "$clear" ]]; then
@@ -141,9 +140,8 @@ function omz_history {
     # if -l provided, run as if calling `fc' directly
     builtin fc "$@"
   else
-    # otherwise, call `fc -l 1` to show all available
-    # history (and pass additional parameters)
-    builtin fc "$@" -l 1
+    # unless a number is provided, show all history events (starting from 1)
+    [[ ${@[-1]} = *[0-9]* ]] && builtin fc -l "$@" || builtin fc -l "$@" 1
   fi
 }
 
@@ -152,7 +150,8 @@ case $HIST_STAMPS in
   "mm/dd/yyyy") alias history='omz_history -f' ;;
   "dd.mm.yyyy") alias history='omz_history -E' ;;
   "yyyy-mm-dd") alias history='omz_history -i' ;;
-  *) alias history='omz_history' ;;
+  "") alias history='omz_history' ;;
+  *) alias history="omz_history -t '$HIST_STAMPS'" ;;
 esac
 
 ## History file configuration
@@ -400,8 +399,9 @@ function omz_termsupport_preexec {
 precmd_functions+=(omz_termsupport_precmd)
 preexec_functions+=(omz_termsupport_preexec)
 
+
 # Keep Apple Terminal.app's current working directory updated
-# Based on this answer: http://superuser.com/a/315029
+# Based on this answer: https://superuser.com/a/315029
 # With extra fixes to handle multibyte chars and non-UTF-8 locales
 
 if [[ "$TERM_PROGRAM" == "Apple_Terminal" ]] && [[ -z "$INSIDE_EMACS" ]]; then
