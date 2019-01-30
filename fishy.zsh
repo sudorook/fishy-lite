@@ -44,6 +44,9 @@ else
 fi
 unset CASE_SENSITIVE HYPHEN_INSENSITIVE
 
+# Complete . and .. special directories
+zstyle ':completion:*' special-dirs true
+
 zstyle ':completion:*' list-colors ''
 zstyle ':completion:*:*:kill:*:processes' list-colors '=(#b) #([0-9]#) ([0-9a-z-]#)*=01;34=0=01'
 
@@ -500,7 +503,8 @@ _fishy_collapsed_wd() {
     BEGIN {
       binmode STDIN,  ":encoding(UTF-8)";
       binmode STDOUT, ":encoding(UTF-8)";
-    }; s|^$ENV{HOME}|~|g; s|/([^/.])[^/]*(?=/)|/$1|g; s|/\.([^/])[^/]*(?=/)|/.$1|g')
+    }; s|^$ENV{HOME}|~|g; s|/([^/.])[^/]*(?=/)|/$1|g; s|/\.([^/])[^/]*(?=/)|/.$1|g
+  ')
 }
 
 user_color='cyan'; [ $UID -eq 0 ] && user_color='red';
