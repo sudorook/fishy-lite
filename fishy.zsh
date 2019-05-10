@@ -144,12 +144,12 @@ function omz_history {
     builtin fc "$@"
   else
     # unless a number is provided, show all history events (starting from 1)
-    [[ ${@[-1]} = *[0-9]* ]] && builtin fc -l "$@" || builtin fc -l "$@" 1
+    [[ ${@[-1]-} = *[0-9]* ]] && builtin fc -l "$@" || builtin fc -l "$@" 1
   fi
 }
 
 # Timestamp format
-case $HIST_STAMPS in
+case ${HIST_STAMPS-} in
   "mm/dd/yyyy") alias history='omz_history -f' ;;
   "dd.mm.yyyy") alias history='omz_history -E' ;;
   "yyyy-mm-dd") alias history='omz_history -i' ;;
@@ -345,7 +345,7 @@ function title {
       print -Pn "\e]2;$2:q\a" # set window name
       print -Pn "\e]1;$1:q\a" # set tab name
       ;;
-    screen*)
+    screen*|tmux*)
       print -Pn "\ek$1:q\e\\" # set screen hardstatus
       ;;
     *)
@@ -453,7 +453,7 @@ if [[ "$DISABLE_LS_COLORS" != "true" ]]; then
     # coreutils, so prefer it to "gls".
     gls --color -d . &>/dev/null && alias ls='gls --color=tty'
     colorls -G -d . &>/dev/null && alias ls='colorls -G'
-  elif [[ "$OSTYPE" == darwin* ]]; then
+  elif [[ "$OSTYPE" == (darwin|freebsd)* ]]; then
     # this is a good alias, it works by default just using $LSCOLORS
     ls -G . &>/dev/null && alias ls='ls -G'
 
@@ -478,9 +478,6 @@ setopt multios
 setopt prompt_subst
 
 [[ -n "$WINDOW" ]] && SCREEN_NO="%B$WINDOW%b " || SCREEN_NO=""
-
-# Apply theming defaults
-PS1="%n@%m:%~%# "
 
 # git theming default: Variables for theming the git info prompt
 ZSH_THEME_GIT_PROMPT_PREFIX="git:("         # Prefix at the very beginning of the prompt, before the branch name
