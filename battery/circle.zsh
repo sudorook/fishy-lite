@@ -20,9 +20,8 @@ elif [[ "$OSTYPE" = linux* ]] ; then
   }
 
   function battery_pct() {
-    if (( $+commands[acpi] )) ; then
-      echo "$(acpi 2>/dev/null | sed -n 1p | cut -f2 -d ',' | tr -cd '[:digit:]')"
-    fi
+    [[ -f "/sys/class/power_supply/BAT0/capacity" ]] && \
+      cat "/sys/class/power_supply/BAT0/capacity"
   }
 else
   function battery_is_charging() {}
