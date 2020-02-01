@@ -255,7 +255,7 @@ bindkey "^[m" copy-prev-shell-word
 ## Load smart urls if available
 # bracketed-paste-magic is known buggy in zsh 5.1.1 (only), so skip it there; see #4434
 autoload -Uz is-at-least
-if [[ $ZSH_VERSION != 5.1.1 ]]; then
+if [[ $DISABLE_MAGIC_FUNCTIONS != true ]]; then
   for d in $fpath; do
     if [[ -e "$d/url-quote-magic" ]]; then
       if is-at-least 5.1; then
@@ -277,11 +277,6 @@ if which ack-grep &> /dev/null; then
   alias afind='ack-grep -il'
 else
   alias afind='ack -il'
-fi
-
-# only define LC_CTYPE if undefined
-if [[ -z "$LC_CTYPE" && -z "$LC_ALL" ]]; then
-  export LC_CTYPE=${LANG%%:*} # pick the first entry from LANG
 fi
 
 # recognize comments
@@ -399,8 +394,9 @@ function omz_termsupport_preexec {
   title '$CMD' '%100>...>$LINE%<<'
 }
 
-precmd_functions+=(omz_termsupport_precmd)
-preexec_functions+=(omz_termsupport_preexec)
+autoload -U add-zsh-hook
+add-zsh-hook precmd omz_termsupport_precmd
+add-zsh-hook preexec omz_termsupport_preexec
 
 
 # Keep Apple Terminal.app's current working directory updated
@@ -423,7 +419,7 @@ if [[ "$TERM_PROGRAM" == "Apple_Terminal" ]] && [[ -z "$INSIDE_EMACS" ]]; then
   }
 
   # Use a precmd hook instead of a chpwd hook to avoid contaminating output
-  precmd_functions+=(update_terminalapp_cwd)
+  add-zsh-hook precmd update_terminalapp_cwd
   # Run once to get initial cwd set
   update_terminalapp_cwd
 fi
