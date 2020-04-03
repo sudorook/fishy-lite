@@ -91,39 +91,55 @@ if [[ $COMPLETION_WAITING_DOTS = true ]]; then
   bindkey "^I" expand-or-complete-with-dots
 fi
 
+# automatically load bash completion functions
+autoload -Uz bashcompinit && bashcompinit
+
 
 #
 # from lib/grep.zsh
 #
 
-# is x grep argument available?
-grep-flag-available() {
-    echo | grep $1 "" >/dev/null 2>&1
-}
+__GREP_CACHE_FILE="$ZSH_CACHE_DIR"/grep-alias
 
-GREP_OPTIONS=""
+# See if there's a cache file modified in the last day
+__GREP_ALIAS_CACHES=("$__GREP_CACHE_FILE"(Nm-1))
+if [[ -n "$__GREP_ALIAS_CACHES" ]]; then
+    source "$__GREP_CACHE_FILE"
+else
+    grep-flags-available() {
+        command grep "$@" "" &>/dev/null <<< ""
+    }
 
-# color grep results
-if grep-flag-available --color=auto; then
-    GREP_OPTIONS+=" --color=auto"
+    # Ignore these folders (if the necessary grep flags are available)
+    EXC_FOLDERS="{.bzr,CVS,.git,.hg,.svn,.idea,.tox}"
+
+    # Check for --exclude-dir, otherwise check for --exclude. If --exclude
+    # isn't available, --color won't be either (they were released at the same
+    # time (v2.5): https://git.savannah.gnu.org/cgit/grep.git/tree/NEWS?id=1236f007
+    if grep-flags-available --color=auto --exclude-dir=.cvs; then
+        GREP_OPTIONS="--color=auto --exclude-dir=$EXC_FOLDERS"
+    elif grep-flags-available --color=auto --exclude=.cvs; then
+        GREP_OPTIONS="--color=auto --exclude=$EXC_FOLDERS"
+    fi
+
+    if [[ -n "$GREP_OPTIONS" ]]; then
+        # export grep, egrep and fgrep settings
+        alias grep="grep $GREP_OPTIONS"
+        alias egrep="egrep $GREP_OPTIONS"
+        alias fgrep="fgrep $GREP_OPTIONS"
+
+        # write to cache file if cache directory is writable
+        if [[ -w "$ZSH_CACHE_DIR" ]]; then
+            alias -L grep egrep fgrep >| "$__GREP_CACHE_FILE"
+        fi
+    fi
+
+    # Clean up
+    unset GREP_OPTIONS EXC_FOLDERS
+    unfunction grep-flags-available
 fi
 
-# ignore VCS folders (if the necessary grep flags are available)
-VCS_FOLDERS="{.bzr,CVS,.git,.hg,.svn}"
-
-if grep-flag-available --exclude-dir=.cvs; then
-    GREP_OPTIONS+=" --exclude-dir=$VCS_FOLDERS"
-elif grep-flag-available --exclude=.cvs; then
-    GREP_OPTIONS+=" --exclude=$VCS_FOLDERS"
-fi
-
-# export grep settings
-alias grep="grep $GREP_OPTIONS"
-
-# clean up
-unset GREP_OPTIONS
-unset VCS_FOLDERS
-unfunction grep-flag-available
+unset __GREP_CACHE_FILE __GREP_ALIAS_CACHES
 
 
 #
@@ -252,9 +268,9 @@ bindkey "^[m" copy-prev-shell-word
 # from lib/misc.zsh
 #
 
-## Load smart urls if available
-# bracketed-paste-magic is known buggy in zsh 5.1.1 (only), so skip it there; see #4434
 autoload -Uz is-at-least
+
+# *-magic is known buggy in some versions; disable if so
 if [[ $DISABLE_MAGIC_FUNCTIONS != true ]]; then
   for d in $fpath; do
     if [[ -e "$d/url-quote-magic" ]]; then
@@ -336,7 +352,7 @@ function title {
   : ${2=$1}
 
   case "$TERM" in
-    cygwin|xterm*|putty*|rxvt*|ansi)
+    cygwin|xterm*|putty*|rxvt*|konsole*|ansi)
       print -Pn "\e]2;$2:q\a" # set window name
       print -Pn "\e]1;$1:q\a" # set tab name
       ;;
@@ -369,22 +385,52 @@ fi
 
 # Runs before showing the prompt
 function omz_termsupport_precmd {
-  emulate -L zsh
-
-  if [[ "$DISABLE_AUTO_TITLE" == true ]]; then
-    return
-  fi
-
+  [[ "$DISABLE_AUTO_TITLE" == true ]] && return
   title $ZSH_THEME_TERM_TAB_TITLE_IDLE $ZSH_THEME_TERM_TITLE_IDLE
 }
 
 # Runs before executing the command
 function omz_termsupport_preexec {
+  [[ "$DISABLE_AUTO_TITLE" == true ]] && return
+
   emulate -L zsh
   setopt extended_glob
 
-  if [[ "$DISABLE_AUTO_TITLE" == true ]]; then
-    return
+  # split command into array of arguments
+  local -a cmdargs
+  cmdargs=("${(z)2}")
+  # if running fg, extract the command from the job description
+  if [[ "${cmdargs[1]}" = fg ]]; then
+    # get the job id from the first argument passed to the fg command
+    local job_id jobspec="${cmdargs[2]#%}"
+    # logic based on jobs arguments:
+    # http://zsh.sourceforge.net/Doc/Release/Jobs-_0026-Signals.html#Jobs
+    # https://www.zsh.org/mla/users/2007/msg00704.html
+    case "$jobspec" in
+      <->) # %number argument:
+        # use the same <number> passed as an argument
+        job_id=${jobspec} ;;
+      ""|%|+) # empty, %% or %+ argument:
+        # use the current job, which appears with a + in $jobstates:
+        # suspended:+:5071=suspended (tty output)
+        job_id=${(k)jobstates[(r)*:+:*]} ;;
+      -) # %- argument:
+        # use the previous job, which appears with a - in $jobstates:
+        # suspended:-:6493=suspended (signal)
+        job_id=${(k)jobstates[(r)*:-:*]} ;;
+      [?]*) # %?string argument:
+        # use $jobtexts to match for a job whose command *contains* <string>
+        job_id=${(k)jobtexts[(r)*${(Q)jobspec}*]} ;;
+      *) # %string argument:
+        # use $jobtexts to match for a job whose command *starts with* <string>
+        job_id=${(k)jobtexts[(r)${(Q)jobspec}*]} ;;
+    esac
+
+    # override preexec function arguments with job command
+    if [[ -n "${jobtexts[$job_id]}" ]]; then
+      1="${jobtexts[$job_id]}"
+      2="${jobtexts[$job_id]}"
+    fi
   fi
 
   # cmd name only, or if this is sudo or ssh, the next cmd
@@ -410,12 +456,13 @@ if [[ "$TERM_PROGRAM" == "Apple_Terminal" ]] && [[ -z "$INSIDE_EMACS" ]]; then
   function update_terminalapp_cwd() {
     emulate -L zsh
 
-    # Percent-encode the pathname.
-    local URL_PATH="$(omz_urlencode -P $PWD)"
-    [[ $? != 0 ]] && return 1
+    # Percent-encode the host and path names.
+    local URL_HOST URL_PATH
+    URL_HOST="$(omz_urlencode -P $HOST)" || return 1
+    URL_PATH="$(omz_urlencode -P $PWD)" || return 1
 
     # Undocumented Terminal.app-specific control sequence
-    printf '\e]7;%s\a' "file://$HOST$URL_PATH"
+    printf '\e]7;%s\a' "file://$URL_HOST$URL_PATH"
   }
 
   # Use a precmd hook instead of a chpwd hook to avoid contaminating output
@@ -480,6 +527,8 @@ ZSH_THEME_GIT_PROMPT_PREFIX="git:("         # Prefix at the very beginning of th
 ZSH_THEME_GIT_PROMPT_SUFFIX=")"             # At the very end of the prompt
 ZSH_THEME_GIT_PROMPT_DIRTY="*"              # Text to display if the branch is dirty
 ZSH_THEME_GIT_PROMPT_CLEAN=""               # Text to display if the branch is clean
+ZSH_THEME_RUBY_PROMPT_PREFIX="("
+ZSH_THEME_RUBY_PROMPT_SUFFIX=")"
 
 
 #
@@ -528,7 +577,6 @@ if ! typeset -f battery_charging >/dev/null; then
 fi
 
 return_status="%{$fg_bold[red]%}%(?..%?)%{$reset_color%}"
-
 RPROMPT='${return_status}%{$reset_color%}$(git_prompt_info)$(git_prompt_status)%{$reset_color%}$(battery_level_gauge)$(battery_level_blockgauge)$(battery_level_circlegauge)$(battery_pct_prompt)$(battery_charging)%{$reset_color%}'
 
 ZSH_THEME_GIT_PROMPT_PREFIX=" "
