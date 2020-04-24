@@ -2,21 +2,20 @@
 # Create prompts for displaying battery levels.
 #
 
-if [[ "$OSTYPE" = darwin* ]] ; then
+if [[ "$OSTYPE" = darwin* ]]; then
   function battery_is_charging() {
-    [[ $(ioreg -rc "AppleSmartBattery"| grep '^.*"IsCharging"\ =\ ' | sed -e 's/^.*"IsCharging"\ =\ //') == "Yes" ]]
+    ioreg -rc AppleSmartBattery | command grep -q '^.*"ExternalConnected"\ =\ Yes'
   }
 
   function battery_pct() {
-    local smart_battery_status="$(ioreg -rc "AppleSmartBattery")"
-    typeset -F maxcapacity=$(echo $smart_battery_status | grep '^.*"MaxCapacity"\ =\ ' | sed -e 's/^.*"MaxCapacity"\ =\ //')
-    typeset -F currentcapacity=$(echo $smart_battery_status | grep '^.*"CurrentCapacity"\ =\ ' | sed -e 's/^.*CurrentCapacity"\ =\ //')
-    integer i=$(((currentcapacity/maxcapacity) * 100))
-    echo $i
+    local battery_status="$(ioreg -rc AppleSmartBattery)"
+    local -i capacity=$(sed -n -e '/MaxCapacity/s/^.*"MaxCapacity"\ =\ //p' <<< $battery_status)
+    local -i current=$(sed -n -e '/CurrentCapacity/s/^.*"CurrentCapacity"\ =\ //p' <<< $battery_status)
+    echo $(( current * 100 / capacity ))
   }
-elif [[ "$OSTYPE" = linux* ]] ; then
+elif [[ "$OSTYPE" = linux* ]]; then
   function battery_is_charging() {
-    ! [[ $(acpi 2>/dev/null | sed -n 1p | grep -c '^Battery.*Discharging') -gt 0 ]]
+    ! acpi 2>/dev/null | command grep -v "rate information unavailable" | command grep -q '^Battery.*Discharging'
   }
 
   function battery_pct() {
@@ -24,7 +23,7 @@ elif [[ "$OSTYPE" = linux* ]] ; then
       cat "/sys/class/power_supply/BAT0/capacity"
   }
 else
-  function battery_is_charging() {}
+  function battery_is_charging() { false }
   function battery_pct() {}
 fi
 
