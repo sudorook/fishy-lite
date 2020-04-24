@@ -92,7 +92,7 @@ if [[ $COMPLETION_WAITING_DOTS = true ]]; then
 fi
 
 # automatically load bash completion functions
-autoload -Uz bashcompinit && bashcompinit
+autoload -U +X bashcompinit && bashcompinit
 
 
 #
@@ -280,7 +280,7 @@ if [[ $DISABLE_MAGIC_FUNCTIONS != true ]]; then
       fi
       autoload -Uz url-quote-magic
       zle -N self-insert url-quote-magic
-      break
+    break
     fi
   done
 fi
@@ -289,7 +289,7 @@ fi
 setopt long_list_jobs
 
 ## more intelligent acking for ubuntu users
-if which ack-grep &> /dev/null; then
+if (( $+commands[ack-grep] )); then
   alias afind='ack-grep -il'
 else
   alias afind='ack -il'
@@ -306,12 +306,12 @@ setopt interactivecomments
 typeset -AHg FX FG BG
 
 FX=(
-    reset     "%{[00m%}"
-    bold      "%{[01m%}" no-bold      "%{[22m%}"
-    italic    "%{[03m%}" no-italic    "%{[23m%}"
-    underline "%{[04m%}" no-underline "%{[24m%}"
-    blink     "%{[05m%}" no-blink     "%{[25m%}"
-    reverse   "%{[07m%}" no-reverse   "%{[27m%}"
+  reset     "%{[00m%}"
+  bold      "%{[01m%}" no-bold      "%{[22m%}"
+  italic    "%{[03m%}" no-italic    "%{[23m%}"
+  underline "%{[04m%}" no-underline "%{[24m%}"
+  blink     "%{[05m%}" no-blink     "%{[25m%}"
+  reverse   "%{[07m%}" no-reverse   "%{[27m%}"
 )
 
 for color in {000..255}; do
@@ -319,20 +319,19 @@ for color in {000..255}; do
   BG[$color]="%{[48;5;${color}m%}"
 done
 
-
-ZSH_SPECTRUM_TEXT=${ZSH_SPECTRUM_TEXT:-Arma virumque cano Troiae qui primus ab oris}
-
 # Show all 256 colors with color number
 function spectrum_ls() {
+  local ZSH_SPECTRUM_TEXT=${ZSH_SPECTRUM_TEXT:-Arma virumque cano Troiae qui primus ab oris}
   for code in {000..255}; do
-    print -P -- "$code: %{$FG[$code]%}$ZSH_SPECTRUM_TEXT%{$reset_color%}"
+    print -P -- "$code: $FG[$code]$ZSH_SPECTRUM_TEXT%{$reset_color%}"
   done
 }
 
 # Show all 256 colors where the background is set to specific color
 function spectrum_bls() {
+  local ZSH_SPECTRUM_TEXT=${ZSH_SPECTRUM_TEXT:-Arma virumque cano Troiae qui primus ab oris}
   for code in {000..255}; do
-    print -P -- "$code: %{$BG[$code]%}$ZSH_SPECTRUM_TEXT%{$reset_color%}"
+    print -P -- "$code: $BG[$code]$ZSH_SPECTRUM_TEXT%{$reset_color%}"
   done
 }
 
