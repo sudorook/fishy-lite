@@ -351,7 +351,7 @@ function title {
   : ${2=$1}
 
   case "$TERM" in
-    cygwin|xterm*|putty*|rxvt*|konsole*|ansi)
+    cygwin|xterm*|putty*|rxvt*|konsole*|ansi|mlterm)
       print -Pn "\e]2;$2:q\a" # set window name
       print -Pn "\e]1;$1:q\a" # set tab name
       ;;
@@ -384,13 +384,13 @@ fi
 
 # Runs before showing the prompt
 function omz_termsupport_precmd {
-  [[ "$DISABLE_AUTO_TITLE" == true ]] && return
+  [[ "${DISABLE_AUTO_TITLE:-}" == true ]] && return
   title $ZSH_THEME_TERM_TAB_TITLE_IDLE $ZSH_THEME_TERM_TITLE_IDLE
 }
 
 # Runs before executing the command
 function omz_termsupport_preexec {
-  [[ "$DISABLE_AUTO_TITLE" == true ]] && return
+  [[ "${DISABLE_AUTO_TITLE:-}" == true ]] && return
 
   emulate -L zsh
   setopt extended_glob
@@ -513,6 +513,11 @@ if [[ "$DISABLE_LS_COLORS" != "true" ]]; then
     # Take advantage of $LS_COLORS for completion as well.
     zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
   fi
+fi
+
+# enable diff color if possible.
+if diff --color . . &>/dev/null; then
+  alias diff='diff --color'
 fi
 
 setopt auto_cd
