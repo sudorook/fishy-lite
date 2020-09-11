@@ -20,7 +20,7 @@ autoload -U compaudit compinit
 # fixme - the load process here seems a bit bizarre
 zmodload -i zsh/complist
 
-WORDCHARS=''
+WORDCHARS='_-'
 
 unsetopt menu_complete   # do not autoselect the first completion entry
 unsetopt flowcontrol
@@ -79,16 +79,15 @@ zstyle '*' single-ignored show
 
 if [[ $COMPLETION_WAITING_DOTS = true ]]; then
   expand-or-complete-with-dots() {
-    # toggle line-wrapping off and back on again
-    [[ -n "$terminfo[rmam]" && -n "$terminfo[smam]" ]] && echoti rmam
-    print -Pn "%{%F{red}......%f%}"
-    [[ -n "$terminfo[rmam]" && -n "$terminfo[smam]" ]] && echoti smam
-
+    print -Pn "%F{red}…%f"
     zle expand-or-complete
     zle redisplay
   }
   zle -N expand-or-complete-with-dots
-  bindkey "^I" expand-or-complete-with-dots
+  # Set the function as the default tab completion widget
+  bindkey -M emacs "^I" expand-or-complete-with-dots
+  bindkey -M viins "^I" expand-or-complete-with-dots
+  bindkey -M vicmd "^I" expand-or-complete-with-dots
 fi
 
 # automatically load bash completion functions
@@ -175,8 +174,8 @@ esac
 
 ## History file configuration
 [ -z "$HISTFILE" ] && HISTFILE="$HOME/.zsh_history"
-HISTSIZE=50000
-SAVEHIST=10000
+[ "$HISTSIZE" -lt 50000 ] && HISTSIZE=50000
+[ "$SAVEHIST" -lt 10000 ] && SAVEHIST=10000
 
 ## History command configuration
 setopt extended_history       # record timestamp of command in HISTFILE
@@ -184,7 +183,6 @@ setopt hist_expire_dups_first # delete duplicates first when HISTFILE size excee
 setopt hist_ignore_dups       # ignore duplicated commands history list
 setopt hist_ignore_space      # ignore commands that start with space
 setopt hist_verify            # show command with history expansion to user before running it
-setopt inc_append_history     # add commands to HISTFILE in order of execution
 setopt share_history          # share command history data
 
 
@@ -205,55 +203,100 @@ if (( ${+terminfo[smkx]} )) && (( ${+terminfo[rmkx]} )); then
   zle -N zle-line-finish
 fi
 
-bindkey -e                                            # Use emacs key bindings
+# Use emacs key bindings
+bindkey -e
+
+# [PageUp] - Up a line of history
+if [[ -n "${terminfo[kpp]}" ]]; then
+  bindkey -M emacs "${terminfo[kpp]}" up-line-or-history
+  bindkey -M viins "${terminfo[kpp]}" up-line-or-history
+  bindkey -M vicmd "${terminfo[kpp]}" up-line-or-history
+fi
+# [PageDown] - Down a line of history
+if [[ -n "${terminfo[knp]}" ]]; then
+  bindkey -M emacs "${terminfo[knp]}" down-line-or-history
+  bindkey -M viins "${terminfo[knp]}" down-line-or-history
+  bindkey -M vicmd "${terminfo[knp]}" down-line-or-history
+fi
+
+# Start typing + [Up-Arrow] - fuzzy find history forward
+if [[ -n "${terminfo[kcuu1]}" ]]; then
+  autoload -U up-line-or-beginning-search
+  zle -N up-line-or-beginning-search
+
+  bindkey -M emacs "${terminfo[kcuu1]}" up-line-or-beginning-search
+  bindkey -M viins "${terminfo[kcuu1]}" up-line-or-beginning-search
+  bindkey -M vicmd "${terminfo[kcuu1]}" up-line-or-beginning-search
+fi
+# Start typing + [Down-Arrow] - fuzzy find history backward
+if [[ -n "${terminfo[kcud1]}" ]]; then
+  autoload -U down-line-or-beginning-search
+  zle -N down-line-or-beginning-search
+
+  bindkey -M emacs "${terminfo[kcud1]}" down-line-or-beginning-search
+  bindkey -M viins "${terminfo[kcud1]}" down-line-or-beginning-search
+  bindkey -M vicmd "${terminfo[kcud1]}" down-line-or-beginning-search
+fi
+
+# [Home] - Go to beginning of line
+if [[ -n "${terminfo[khome]}" ]]; then
+  bindkey -M emacs "${terminfo[khome]}" beginning-of-line
+  bindkey -M viins "${terminfo[khome]}" beginning-of-line
+  bindkey -M vicmd "${terminfo[khome]}" beginning-of-line
+fi
+# [End] - Go to end of line
+if [[ -n "${terminfo[kend]}" ]]; then
+  bindkey -M emacs "${terminfo[kend]}"  end-of-line
+  bindkey -M viins "${terminfo[kend]}"  end-of-line
+  bindkey -M vicmd "${terminfo[kend]}"  end-of-line
+fi
+
+# [Shift-Tab] - move through the completion menu backwards
+if [[ -n "${terminfo[kcbt]}" ]]; then
+  bindkey -M emacs "${terminfo[kcbt]}" reverse-menu-complete
+  bindkey -M viins "${terminfo[kcbt]}" reverse-menu-complete
+  bindkey -M vicmd "${terminfo[kcbt]}" reverse-menu-complete
+fi
+
+# [Backspace] - delete backward
+bindkey -M emacs '^?' backward-delete-char
+bindkey -M viins '^?' backward-delete-char
+bindkey -M vicmd '^?' backward-delete-char
+# [Delete] - delete forward
+if [[ -n "${terminfo[kdch1]}" ]]; then
+  bindkey -M emacs "${terminfo[kdch1]}" delete-char
+  bindkey -M viins "${terminfo[kdch1]}" delete-char
+  bindkey -M vicmd "${terminfo[kdch1]}" delete-char
+else
+  bindkey -M emacs "^[[3~" delete-char
+  bindkey -M viins "^[[3~" delete-char
+  bindkey -M vicmd "^[[3~" delete-char
+
+  bindkey -M emacs "^[3;5~" delete-char
+  bindkey -M viins "^[3;5~" delete-char
+  bindkey -M vicmd "^[3;5~" delete-char
+fi
+
+# [Ctrl-Delete] - delete whole forward-word
+bindkey -M emacs '^[[3;5~' kill-word
+bindkey -M viins '^[[3;5~' kill-word
+bindkey -M vicmd '^[[3;5~' kill-word
+
+# [Ctrl-RightArrow] - move forward one word
+bindkey -M emacs '^[[1;5C' forward-word
+bindkey -M viins '^[[1;5C' forward-word
+bindkey -M vicmd '^[[1;5C' forward-word
+# [Ctrl-LeftArrow] - move backward one word
+bindkey -M emacs '^[[1;5D' backward-word
+bindkey -M viins '^[[1;5D' backward-word
+bindkey -M vicmd '^[[1;5D' backward-word
+
 
 bindkey '\ew' kill-region                             # [Esc-w] - Kill from the cursor to the mark
 bindkey -s '\el' 'ls\n'                               # [Esc-l] - run command: ls
 bindkey '^r' history-incremental-search-backward      # [Ctrl-r] - Search backward incrementally for a specified string. The string may begin with ^ to anchor the search to the beginning of the line.
-if [[ "${terminfo[kpp]}" != "" ]]; then
-  bindkey "${terminfo[kpp]}" up-line-or-history       # [PageUp] - Up a line of history
-fi
-if [[ "${terminfo[knp]}" != "" ]]; then
-  bindkey "${terminfo[knp]}" down-line-or-history     # [PageDown] - Down a line of history
-fi
+bindkey ' ' magic-space                               # [Space] - don't do history expansion
 
-# start typing + [Up-Arrow] - fuzzy find history forward
-if [[ "${terminfo[kcuu1]}" != "" ]]; then
-  autoload -U up-line-or-beginning-search
-  zle -N up-line-or-beginning-search
-  bindkey "${terminfo[kcuu1]}" up-line-or-beginning-search
-fi
-# start typing + [Down-Arrow] - fuzzy find history backward
-if [[ "${terminfo[kcud1]}" != "" ]]; then
-  autoload -U down-line-or-beginning-search
-  zle -N down-line-or-beginning-search
-  bindkey "${terminfo[kcud1]}" down-line-or-beginning-search
-fi
-
-if [[ "${terminfo[khome]}" != "" ]]; then
-  bindkey "${terminfo[khome]}" beginning-of-line      # [Home] - Go to beginning of line
-fi
-if [[ "${terminfo[kend]}" != "" ]]; then
-  bindkey "${terminfo[kend]}"  end-of-line            # [End] - Go to end of line
-fi
-
-bindkey ' ' magic-space                               # [Space] - do history expansion
-
-bindkey '^[[1;5C' forward-word                        # [Ctrl-RightArrow] - move forward one word
-bindkey '^[[1;5D' backward-word                       # [Ctrl-LeftArrow] - move backward one word
-
-if [[ "${terminfo[kcbt]}" != "" ]]; then
-  bindkey "${terminfo[kcbt]}" reverse-menu-complete   # [Shift-Tab] - move through the completion menu backwards
-fi
-
-bindkey '^?' backward-delete-char                     # [Backspace] - delete backward
-if [[ "${terminfo[kdch1]}" != "" ]]; then
-  bindkey "${terminfo[kdch1]}" delete-char            # [Delete] - delete forward
-else
-  bindkey "^[[3~" delete-char
-  bindkey "^[3;5~" delete-char
-  bindkey "\e[3~" delete-char
-fi
 
 # Edit the current command line in $EDITOR
 autoload -U edit-command-line
@@ -262,6 +305,25 @@ bindkey '\C-x\C-e' edit-command-line
 
 # file rename magick
 bindkey "^[m" copy-prev-shell-word
+
+# consider emacs keybindings:
+
+#bindkey -e  ## emacs key bindings
+#
+#bindkey '^[[A' up-line-or-search
+#bindkey '^[[B' down-line-or-search
+#bindkey '^[^[[C' emacs-forward-word
+#bindkey '^[^[[D' emacs-backward-word
+#
+#bindkey -s '^X^Z' '%-^M'
+#bindkey '^[e' expand-cmd-path
+#bindkey '^[^I' reverse-menu-complete
+#bindkey '^X^N' accept-and-infer-next-history
+#bindkey '^W' kill-region
+#bindkey '^I' complete-word
+## Fix weird sequence that rxvt produces
+#bindkey -s '^[[Z' '\t'
+#
 
 
 #
@@ -351,7 +413,7 @@ function title {
   : ${2=$1}
 
   case "$TERM" in
-    cygwin|xterm*|putty*|rxvt*|konsole*|ansi|mlterm)
+    cygwin|xterm*|putty*|rxvt*|konsole*|ansi|mlterm*)
       print -Pn "\e]2;$2:q\a" # set window name
       print -Pn "\e]1;$1:q\a" # set tab name
       ;;
@@ -516,7 +578,7 @@ if [[ "$DISABLE_LS_COLORS" != "true" ]]; then
 fi
 
 # enable diff color if possible.
-if diff --color . . &>/dev/null; then
+if command diff --color . . &>/dev/null; then
   alias diff='diff --color'
 fi
 
@@ -545,16 +607,22 @@ ZSH_THEME_RUBY_PROMPT_SUFFIX=")"
 #
 
 _fishy_collapsed_wd() {
-  echo $(pwd | perl -pe '
-    BEGIN {
-      binmode STDIN,  ":encoding(UTF-8)";
-      binmode STDOUT, ":encoding(UTF-8)";
-    }; s|^$ENV{HOME}|~|g; s|/([^/.])[^/]*(?=/)|/$1|g; s|/\.([^/])[^/]*(?=/)|/.$1|g
-  ')
+  local i pwd
+  pwd=("${(s:/:)PWD/#$HOME/~}")
+  if (( $#pwd > 1 )); then
+    for i in {1..$(($#pwd-1))}; do
+      if [[ "$pwd[$i]" = .* ]]; then
+        pwd[$i]="${${pwd[$i]}[1,2]}"
+      else
+        pwd[$i]="${${pwd[$i]}[1]}"
+      fi
+    done
+  fi
+  echo "${(j:/:)pwd}"
 }
 
 user_color='cyan'; [ $UID -eq 0 ] && user_color='red';
-PROMPT='%{$fg[$user_color]%}%n %{$reset_color%}$(_fishy_collapsed_wd)%(!.#.>) '
+PROMPT='%{$fg[$user_color]%}%n %{$reset_color%}$(_fishy_collapsed_wd)%{$reset_color%}%(!.#.>) '
 PROMPT2='%{$fg[red]%}\ %{$reset_color%}'
 
 # Add empty copies of functions defined in battery-gauge.zsh and git-prompt.zsh
@@ -581,7 +649,7 @@ if ! typeset -f battery_charging >/dev/null; then
 fi
 
 return_status="%{$fg_bold[red]%}%(?..%?)%{$reset_color%}"
-RPROMPT='${return_status}%{$reset_color%}$(git_prompt_info)$(git_prompt_status)%{$reset_color%}$(battery_level_gauge)$(battery_level_blockgauge)$(battery_level_circlegauge)$(battery_pct_prompt)$(battery_charging)%{$reset_color%}'
+RPROMPT="${RPROMPT}"'${return_status}%{$reset_color%}$(git_prompt_info)$(git_prompt_status)%{$reset_color%}$(battery_level_gauge)$(battery_level_blockgauge)$(battery_level_circlegauge)$(battery_pct_prompt)$(battery_charging)%{$reset_color%}'
 
 ZSH_THEME_GIT_PROMPT_PREFIX=" "
 ZSH_THEME_GIT_PROMPT_SUFFIX=""
