@@ -47,106 +47,6 @@ function parse_git_dirty() {
   fi
 }
 
-# Gets the difference between the local and remote branches
-function git_remote_status() {
-  local remote ahead behind git_remote_status git_remote_status_detailed
-  remote=${$(__git_prompt_git rev-parse --verify ${hook_com[branch]}@{upstream} --symbolic-full-name 2>/dev/null)/refs\/remotes\/}
-  if [[ -n ${remote} ]]; then
-    ahead=$(__git_prompt_git rev-list ${hook_com[branch]}@{upstream}..HEAD 2>/dev/null | wc -l)
-    behind=$(__git_prompt_git rev-list HEAD..${hook_com[branch]}@{upstream} 2>/dev/null | wc -l)
-
-    if [[ $ahead -eq 0 ]] && [[ $behind -eq 0 ]]; then
-      git_remote_status="$ZSH_THEME_GIT_PROMPT_EQUAL_REMOTE"
-    elif [[ $ahead -gt 0 ]] && [[ $behind -eq 0 ]]; then
-      git_remote_status="$ZSH_THEME_GIT_PROMPT_AHEAD_REMOTE"
-      git_remote_status_detailed="$ZSH_THEME_GIT_PROMPT_AHEAD_REMOTE_COLOR$ZSH_THEME_GIT_PROMPT_AHEAD_REMOTE$((ahead))%{$reset_color%}"
-    elif [[ $behind -gt 0 ]] && [[ $ahead -eq 0 ]]; then
-      git_remote_status="$ZSH_THEME_GIT_PROMPT_BEHIND_REMOTE"
-      git_remote_status_detailed="$ZSH_THEME_GIT_PROMPT_BEHIND_REMOTE_COLOR$ZSH_THEME_GIT_PROMPT_BEHIND_REMOTE$((behind))%{$reset_color%}"
-    elif [[ $ahead -gt 0 ]] && [[ $behind -gt 0 ]]; then
-      git_remote_status="$ZSH_THEME_GIT_PROMPT_DIVERGED_REMOTE"
-      git_remote_status_detailed="$ZSH_THEME_GIT_PROMPT_AHEAD_REMOTE_COLOR$ZSH_THEME_GIT_PROMPT_AHEAD_REMOTE$((ahead))%{$reset_color%}$ZSH_THEME_GIT_PROMPT_BEHIND_REMOTE_COLOR$ZSH_THEME_GIT_PROMPT_BEHIND_REMOTE$((behind))%{$reset_color%}"
-    fi
-
-    if [[ -n $ZSH_THEME_GIT_PROMPT_REMOTE_STATUS_DETAILED ]]; then
-      git_remote_status="$ZSH_THEME_GIT_PROMPT_REMOTE_STATUS_PREFIX$remote$git_remote_status_detailed$ZSH_THEME_GIT_PROMPT_REMOTE_STATUS_SUFFIX"
-    fi
-
-    echo $git_remote_status
-  fi
-}
-
-# Outputs the name of the current branch
-# Usage example: git pull origin $(git_current_branch)
-# Using '--quiet' with 'symbolic-ref' will not cause a fatal error (128) if
-# it's not a symbolic ref, but in a Git repo.
-function git_current_branch() {
-  local ref
-  ref=$(__git_prompt_git symbolic-ref --quiet HEAD 2> /dev/null)
-  local ret=$?
-  if [[ $ret != 0 ]]; then
-    [[ $ret == 128 ]] && return  # no git repo.
-    ref=$(__git_prompt_git rev-parse --short HEAD 2> /dev/null) || return
-  fi
-  echo ${ref#refs/heads/}
-}
-
-
-# Gets the number of commits ahead from remote
-function git_commits_ahead() {
-  if __git_prompt_git rev-parse --git-dir &>/dev/null; then
-    local commits="$(__git_prompt_git rev-list --count @{upstream}..HEAD 2>/dev/null)"
-    if [[ -n "$commits" && "$commits" != 0 ]]; then
-      echo "$ZSH_THEME_GIT_COMMITS_AHEAD_PREFIX$commits$ZSH_THEME_GIT_COMMITS_AHEAD_SUFFIX"
-    fi
-  fi
-}
-
-# Gets the number of commits behind remote
-function git_commits_behind() {
-  if __git_prompt_git rev-parse --git-dir &>/dev/null; then
-    local commits="$(__git_prompt_git rev-list --count HEAD..@{upstream} 2>/dev/null)"
-    if [[ -n "$commits" && "$commits" != 0 ]]; then
-      echo "$ZSH_THEME_GIT_COMMITS_BEHIND_PREFIX$commits$ZSH_THEME_GIT_COMMITS_BEHIND_SUFFIX"
-    fi
-  fi
-}
-
-# Outputs if current branch is ahead of remote
-function git_prompt_ahead() {
-  if [[ -n "$(__git_prompt_git rev-list origin/$(git_current_branch)..HEAD 2> /dev/null)" ]]; then
-    echo "$ZSH_THEME_GIT_PROMPT_AHEAD"
-  fi
-}
-
-# Outputs if current branch is behind remote
-function git_prompt_behind() {
-  if [[ -n "$(__git_prompt_git rev-list HEAD..origin/$(git_current_branch) 2> /dev/null)" ]]; then
-    echo "$ZSH_THEME_GIT_PROMPT_BEHIND"
-  fi
-}
-
-# Outputs if current branch exists on remote or not
-function git_prompt_remote() {
-  if [[ -n "$(__git_prompt_git show-ref origin/$(git_current_branch) 2> /dev/null)" ]]; then
-    echo "$ZSH_THEME_GIT_PROMPT_REMOTE_EXISTS"
-  else
-    echo "$ZSH_THEME_GIT_PROMPT_REMOTE_MISSING"
-  fi
-}
-
-# Formats prompt string for current git commit short SHA
-function git_prompt_short_sha() {
-  local SHA
-  SHA=$(__git_prompt_git rev-parse --short HEAD 2> /dev/null) && echo "$ZSH_THEME_GIT_PROMPT_SHA_BEFORE$SHA$ZSH_THEME_GIT_PROMPT_SHA_AFTER"
-}
-
-# Formats prompt string for current git commit long SHA
-function git_prompt_long_sha() {
-  local SHA
-  SHA=$(__git_prompt_git rev-parse HEAD 2> /dev/null) && echo "$ZSH_THEME_GIT_PROMPT_SHA_BEFORE$SHA$ZSH_THEME_GIT_PROMPT_SHA_AFTER"
-}
-
 # Get the status of the working tree
 function git_prompt_status() {
   [[ "$(__git_prompt_git config --get oh-my-zsh.hide-status 2>/dev/null)" = 1 ]] && return
@@ -244,18 +144,6 @@ function git_prompt_status() {
   done
 
   echo $status_prompt
-}
-
-# Outputs the name of the current user
-# Usage example: $(git_current_user_name)
-function git_current_user_name() {
-  __git_prompt_git config user.name 2>/dev/null
-}
-
-# Outputs the email of the current user
-# Usage example: $(git_current_user_email)
-function git_current_user_email() {
-  __git_prompt_git config user.email 2>/dev/null
 }
 
 # Output the name of the root directory of the git repository
