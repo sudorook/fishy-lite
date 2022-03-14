@@ -179,7 +179,6 @@ esac
 ## History file configuration
 [ -z "$HISTFILE" ] && HISTFILE="$HOME/.zsh_history"
 [ "$HISTSIZE" -lt 50000 ] && HISTSIZE=50000
-# [ "$SAVEHIST" -lt 20000 ] && SAVEHIST=20000
 [ "$SAVEHIST" -lt 10000 ] && SAVEHIST=10000
 
 ## History command configuration
@@ -413,14 +412,14 @@ function title {
   setopt localoptions nopromptsubst
 
   # Don't set the title if inside emacs, unless using vterm
-  [[ -n "$INSIDE_EMACS" && "$INSIDE_EMACS" != vterm ]] && return
+  [[ -n "${INSIDE_EMACS:-}" && "$INSIDE_EMACS" != vterm ]] && return
 
   # if $2 is unset use $1 as default
   # if it is set and empty, leave it as is
   : ${2=$1}
 
   case "$TERM" in
-    cygwin|xterm*|putty*|rxvt*|konsole*|ansi|mlterm*|alacritty|st*)
+    cygwin|xterm*|putty*|rxvt*|konsole*|ansi|mlterm*|alacritty|st*|foot)
       print -Pn "\e]2;${2:q}\a" # set window name
       print -Pn "\e]1;${1:q}\a" # set tab name
       ;;
