@@ -6,7 +6,6 @@ if [[ "$OSTYPE" = darwin* ]]; then
   function battery_is_charging() {
     ioreg -rc AppleSmartBattery | command grep -q '^.*"ExternalConnected"\ =\ Yes'
   }
-
   function battery_pct() {
     pmset -g batt | grep -Eo "\d+%" | cut -d% -f1
   }
@@ -23,7 +22,6 @@ elif [[ "$OSTYPE" = linux* ]]; then
   function battery_is_charging() {
     ! acpi 2>/dev/null | command grep -v "rate information unavailable" | command grep -q '^Battery.*Discharging'
   }
-
   function battery_pct() {
     [[ -f "/sys/class/power_supply/BAT0/capacity" ]] && \
       cat "/sys/class/power_supply/BAT0/capacity"
@@ -59,20 +57,20 @@ function battery_level_circlegauge() {
   local battery_remaining_percentage=$(battery_pct);
 
   if [[ $battery_remaining_percentage =~ [0-9]+ ]]; then
-    if (( $battery_remaining_percentage >= 88 )); then
+    if (( battery_remaining_percentage >= 88 )); then
       circlegauge=$filled_symbol
-    elif (( $battery_remaining_percentage >= 63 )); then
+    elif (( battery_remaining_percentage >= 63 )); then
       circlegauge=$threefourths_symbol
-    elif (( $battery_remaining_percentage >= 38 )); then
+    elif (( battery_remaining_percentage >= 38 )); then
       circlegauge=$half_symbol
-    elif (( $battery_remaining_percentage >= 13 )); then
+    elif (( battery_remaining_percentage >= 13 )); then
       circlegauge=$onefourth_symbol
     else
       circlegauge=$empty_symbol
     fi
-    if (( $battery_remaining_percentage >= 50 )); then
+    if (( battery_remaining_percentage >= 50 )); then
       gauge_color=$color_green
-    elif (( $battery_remaining_percentage >= 20 )); then
+    elif (( battery_remaining_percentage >= 20 )); then
       gauge_color=$color_yellow
     else
       gauge_color=$color_red

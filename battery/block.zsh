@@ -6,7 +6,6 @@ if [[ "$OSTYPE" = darwin* ]]; then
   function battery_is_charging() {
     ioreg -rc AppleSmartBattery | command grep -q '^.*"ExternalConnected"\ =\ Yes'
   }
-
   function battery_pct() {
     pmset -g batt | grep -Eo "\d+%" | cut -d% -f1
   }
@@ -23,7 +22,6 @@ elif [[ "$OSTYPE" = linux* ]]; then
   function battery_is_charging() {
     ! acpi 2>/dev/null | command grep -v "rate information unavailable" | command grep -q '^Battery.*Discharging'
   }
-
   function battery_pct() {
     [[ -f "/sys/class/power_supply/BAT0/capacity" ]] && \
       cat "/sys/class/power_supply/BAT0/capacity"
@@ -63,28 +61,28 @@ function battery_level_blockgauge() {
   local battery_remaining_percentage=$(battery_pct);
 
   if [[ $battery_remaining_percentage =~ [0-9]+ ]]; then
-    if (( $battery_remaining_percentage >= 93.75 )); then
+    if (( battery_remaining_percentage >= 93.75 )); then
       blockgauge=$filled_symbol
-    elif (( $battery_remaining_percentage >= 81.25 )); then
+    elif (( battery_remaining_percentage >= 81.25 )); then
       blockgauge=$seveneighths_symbol
-    elif (( $battery_remaining_percentage >= 68.75 )); then
+    elif (( battery_remaining_percentage >= 68.75 )); then
       blockgauge=$threefourths_symbol
-    elif (( $battery_remaining_percentage >= 56.25 )); then
+    elif (( battery_remaining_percentage >= 56.25 )); then
       blockgauge=$fiveeighths_symbol
-    elif (( $battery_remaining_percentage >= 43.75 )); then
+    elif (( battery_remaining_percentage >= 43.75 )); then
       blockgauge=$half_symbol
-    elif (( $battery_remaining_percentage >= 31.25 )); then
+    elif (( battery_remaining_percentage >= 31.25 )); then
       blockgauge=$threeeighths_symbol
-    elif (( $battery_remaining_percentage >= 18.75 )); then
+    elif (( battery_remaining_percentage >= 18.75 )); then
       blockgauge=$onefourth_symbol
-    elif (( $battery_remaining_percentage >= 6.25 )); then
+    elif (( battery_remaining_percentage >= 6.25 )); then
       blockgauge=$oneeighth_symbol
     else
       blockgauge=$empty_symbol
     fi
-    if (( $battery_remaining_percentage >= 50 )); then
+    if (( battery_remaining_percentage >= 50 )); then
       gauge_color=$color_green
-    elif (( $battery_remaining_percentage >= 20 )); then
+    elif (( battery_remaining_percentage >= 20 )); then
       gauge_color=$color_yellow
     else
       gauge_color=$color_red

@@ -6,7 +6,6 @@ if [[ "$OSTYPE" = darwin* ]]; then
   function battery_is_charging() {
     ioreg -rc AppleSmartBattery | command grep -q '^.*"ExternalConnected"\ =\ Yes'
   }
-
   function battery_pct() {
     pmset -g batt | grep -Eo "\d+%" | cut -d% -f1
   }
@@ -23,7 +22,6 @@ elif [[ "$OSTYPE" = linux* ]]; then
   function battery_is_charging() {
     ! acpi 2>/dev/null | command grep -v "rate information unavailable" | command grep -q '^Battery.*Discharging'
   }
-
   function battery_pct() {
     [[ -f "/sys/class/power_supply/BAT0/capacity" ]] && \
       cat "/sys/class/power_supply/BAT0/capacity"
