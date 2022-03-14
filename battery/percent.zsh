@@ -53,7 +53,5 @@ function battery_pct_prompt() {
       color='red'
     fi
     echo " %{$fg[$color]%}$(battery_pct)%%%{$reset_color%}"
-  else
-    echo "∞"
   fi
 }
