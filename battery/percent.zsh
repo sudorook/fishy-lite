@@ -10,6 +10,15 @@ if [[ "$OSTYPE" = darwin* ]]; then
   function battery_pct() {
     pmset -g batt | grep -Eo "\d+%" | cut -d% -f1
   }
+elif [[ "$OSTYPE" = freebsd* ]]; then
+  function battery_is_charging() {
+    [[ $(sysctl -n hw.acpi.battery.state) -eq 2 ]]
+  }
+  function battery_pct() {
+    if (( $+commands[sysctl] )); then
+      sysctl -n hw.acpi.battery.life
+    fi
+  }
 elif [[ "$OSTYPE" = linux* ]]; then
   function battery_is_charging() {
     ! acpi 2>/dev/null | command grep -v "rate information unavailable" | command grep -q '^Battery.*Discharging'
