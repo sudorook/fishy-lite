@@ -103,6 +103,19 @@ source /path/to/fishy-lite/battery/circle.zsh
 antigen bundle sudorook/fishy-lite plugins/battery-circle
 ```
 
+### Icon gauge
+
+![Percentage screenshot](assets/icon.png)
+
+#### Manual
+```
+source /path/to/fishy-lite/battery/icon.zsh
+```
+
+#### Antigen
+```
+antigen bundle sudorook/fishy-lite plugins/battery-icon
+```
 
 ### Percentage gauge
 
