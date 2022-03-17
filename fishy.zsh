@@ -612,18 +612,18 @@ ZSH_THEME_RUBY_PROMPT_SUFFIX=")"
 #
 
 _fishy_collapsed_wd() {
-  local i pwd
-  pwd=("${(s:/:)PWD/#$HOME/~}")
-  if (( $#pwd > 1 )); then
-    for i in {1..$(($#pwd-1))}; do
-      if [[ "$pwd[$i]" = .* ]]; then
-        pwd[$i]="${${pwd[$i]}[1,2]}"
+  local i wd
+  wd=("${(s:/:)PWD/#$HOME/~}")
+  if (( $#wd > 1 )); then
+    for i in {1..$(($#wd-1))}; do
+      if [[ "$wd[$i]" = .* ]]; then
+        wd[$i]="${${wd[$i]}[1,2]}"
       else
-        pwd[$i]="${${pwd[$i]}[1]}"
+        wd[$i]="${${wd[$i]}[1]}"
       fi
     done
   fi
-  echo "${(j:/:)pwd}"
+  echo "${(j:/:)wd}"
 }
 
 user_color='cyan'; [ $UID -eq 0 ] && user_color='red';
