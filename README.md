@@ -107,6 +107,8 @@ antigen bundle sudorook/fishy-lite plugins/battery-circle
 
 ![Percentage screenshot](assets/icon.png)
 
+**Note:** This requires Nerd-patched fonts.
+
 #### Manual
 ```
 source /path/to/fishy-lite/battery/icon.zsh
