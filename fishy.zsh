@@ -37,9 +37,9 @@ if [[ "$CASE_SENSITIVE" = true ]]; then
   zstyle ':completion:*' matcher-list 'r:|=*' 'l:|=* r:|=*'
 else
   if [[ "$HYPHEN_INSENSITIVE" = true ]]; then
-    zstyle ':completion:*' matcher-list 'm:{a-zA-Z-_}={A-Za-z_-}' 'r:|=*' 'l:|=* r:|=*'
+    zstyle ':completion:*' matcher-list 'm:{[:lower:][:upper:]-_}={[:upper:][:lower:]_-}' 'r:|=*' 'l:|=* r:|=*'
   else
-    zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|=*' 'l:|=* r:|=*'
+    zstyle ':completion:*' matcher-list 'm:{[:lower:][:upper:]}={[:upper:][:lower:]}' 'r:|=*' 'l:|=* r:|=*'
   fi
 fi
 unset CASE_SENSITIVE HYPHEN_INSENSITIVE
@@ -351,8 +351,15 @@ if [[ $DISABLE_MAGIC_FUNCTIONS != true ]]; then
   done
 fi
 
-## jobs
-setopt long_list_jobs
+setopt multios              # enable redirect to multiple streams: echo >file1 >file2
+setopt long_list_jobs       # show long list format job notifications
+setopt interactivecomments  # recognize comments
+
+env_default 'PAGER' 'less'
+env_default 'LESS' '-R'
+
+## super user alias
+alias _='sudo '
 
 ## more intelligent acking for ubuntu users and no alias for users without ack
 if (( $+commands[ack-grep] )); then
@@ -360,9 +367,6 @@ if (( $+commands[ack-grep] )); then
 elif (( $+commands[ack] )); then
   alias afind='ack -il'
 fi
-
-# recognize comments
-setopt interactivecomments
 
 
 #
@@ -408,6 +412,14 @@ function spectrum_bls() {
 # from lib/termsupport.zsh
 #
 
+# Set terminal window and tab/icon title
+#
+# usage: title short_tab_title [long_window_title]
+#
+# See: http://www.faqs.org/docs/Linux-mini/Xterm-Title.html#ss3.1
+# Fully supports screen, iterm, and probably most modern xterm and rxvt
+# (In screen, only short_tab_title is used)
+# Limited support for Apple Terminal (Terminal can't set window and tab separately)
 function title {
   setopt localoptions nopromptsubst
 
@@ -419,7 +431,7 @@ function title {
   : ${2=$1}
 
   case "$TERM" in
-    cygwin|xterm*|putty*|rxvt*|konsole*|ansi|mlterm*|alacritty|st*|foot)
+    cygwin|xterm*|putty*|rxvt*|konsole*|ansi|mlterm*|alacritty|st*|foot|contour*)
       print -Pn "\e]2;${2:q}\a" # set window name
       print -Pn "\e]1;${1:q}\a" # set tab name
       ;;
@@ -511,99 +523,145 @@ if [[ -z "$INSIDE_EMACS" || "$INSIDE_EMACS" = vterm ]]; then
   add-zsh-hook preexec omz_termsupport_preexec
 fi
 
-# Keep Apple Terminal.app's current working directory updated
-# Based on this answer: https://superuser.com/a/315029
-# With extra fixes to handle multibyte chars and non-UTF-8 locales
+# Keep terminal emulator's current working directory correct,
+# even if the current working directory path contains symbolic links
+#
+# References:
+# - Apple's Terminal.app: https://superuser.com/a/315029
+# - iTerm2: https://iterm2.com/documentation-escape-codes.html (iTerm2 Extension / CurrentDir+RemoteHost)
+# - Konsole: https://bugs.kde.org/show_bug.cgi?id=327720#c1
+# - libvte (gnome-terminal, mate-terminal, …): https://bugzilla.gnome.org/show_bug.cgi?id=675987#c14
+#   Apparently it had a bug before ~2012 were it would display the unknown OSC 7 code
+#
+# As of May 2021 mlterm, PuTTY, rxvt, screen, termux & xterm simply ignore the unknown OSC.
 
-if [[ "$TERM_PROGRAM" == "Apple_Terminal" ]] && [[ -z "$INSIDE_EMACS" ]]; then
-  # Emits the control sequence to notify Terminal.app of the cwd
-  # Identifies the directory using a file: URI scheme, including
-  # the host name to disambiguate local vs. remote paths.
-  function update_terminalapp_cwd() {
-    emulate -L zsh
-
-    # Percent-encode the host and path names.
-    local URL_HOST URL_PATH
-    URL_HOST="$(omz_urlencode -P $HOST)" || return 1
-    URL_PATH="$(omz_urlencode -P $PWD)" || return 1
-
-    # Undocumented Terminal.app-specific control sequence
-    printf '\e]7;%s\a' "file://$URL_HOST$URL_PATH"
-  }
-
-  # Use a precmd hook instead of a chpwd hook to avoid contaminating output
-  add-zsh-hook precmd update_terminalapp_cwd
-  # Run once to get initial cwd set
-  update_terminalapp_cwd
+# Don't define the function if we're inside Emacs or in an SSH session (#11696)
+if [[ -n "$INSIDE_EMACS" || -n "$SSH_CLIENT" || -n "$SSH_TTY" ]]; then
+  return
 fi
+
+# Don't define the function if we're in an unsupported terminal
+case "$TERM" in
+  # all of these either process OSC 7 correctly or ignore entirely
+  xterm*|putty*|rxvt*|konsole*|mlterm*|alacritty|screen*|tmux*) ;;
+  contour*|foot*) ;;
+  *)
+    # Terminal.app and iTerm2 process OSC 7 correctly
+    case "$TERM_PROGRAM" in
+      Apple_Terminal|iTerm.app) ;;
+      *) return ;;
+    esac ;;
+esac
+
+# Emits the control sequence to notify many terminal emulators
+# of the cwd
+#
+# Identifies the directory using a file: URI scheme, including
+# the host name to disambiguate local vs. remote paths.
+function omz_termsupport_cwd {
+  # Percent-encode the host and path names.
+  local URL_HOST URL_PATH
+  URL_HOST="$(omz_urlencode -P $HOST)" || return 1
+  URL_PATH="$(omz_urlencode -P $PWD)" || return 1
+
+  # Konsole errors if the HOST is provided
+  [[ -z "$KONSOLE_VERSION" ]] || URL_HOST=""
+
+  # common control sequence (OSC 7) to set current host and path
+  printf "\e]7;file://%s%s\e\\" "${URL_HOST}" "${URL_PATH}"
+}
+
+# Use a precmd hook instead of a chpwd hook to avoid contaminating output
+# i.e. when a script or function changes directory without `cd -q`, chpwd
+# will be called the output may be swallowed by the script or function.
+add-zsh-hook precmd omz_termsupport_cwd
 
 
 #
 # from lib/theme-and-appearance.zsh
 #
 
+# Sets color variable such as $fg, $bg, $color and $reset_color
 autoload -U colors && colors
 
-# Enable ls colors
+# Expand variables and commands in PROMPT variables
+setopt prompt_subst
+
+# Prompt function theming defaults
+ZSH_THEME_GIT_PROMPT_PREFIX="git:("   # Beginning of the git prompt, before the branch name
+ZSH_THEME_GIT_PROMPT_SUFFIX=")"       # End of the git prompt
+ZSH_THEME_GIT_PROMPT_DIRTY="*"        # Text to display if the branch is dirty
+ZSH_THEME_GIT_PROMPT_CLEAN=""         # Text to display if the branch is clean
+ZSH_THEME_RUBY_PROMPT_PREFIX="("
+ZSH_THEME_RUBY_PROMPT_SUFFIX=")"
+
+
+# Use diff --color if available
+if command diff --color /dev/null{,} &>/dev/null; then
+  function diff {
+    command diff --color "$@"
+  }
+fi
+
+# Don't set ls coloring if disabled
+[[ "$DISABLE_LS_COLORS" != true ]] || return 0
+
+# Default coloring for BSD-based ls
 export LSCOLORS="Gxfxcxdxbxegedabagacad"
 
-# TODO organise this chaotic logic
-
-if [[ "$DISABLE_LS_COLORS" != "true" ]]; then
-  # Find the option for using colors in ls, depending on the version
-  if [[ "$OSTYPE" == netbsd* ]]; then
-    # On NetBSD, test if "gls" (GNU ls) is installed (this one supports colors);
-    # otherwise, leave ls as is, because NetBSD's ls doesn't support -G
-    gls --color -d . &>/dev/null && alias ls='gls --color=tty'
-  elif [[ "$OSTYPE" == openbsd* ]]; then
-    # On OpenBSD, "gls" (ls from GNU coreutils) and "colorls" (ls from base,
-    # with color and multibyte support) are available from ports.  "colorls"
-    # will be installed on purpose and can't be pulled in by installing
-    # coreutils, so prefer it to "gls".
-    gls --color -d . &>/dev/null && alias ls='gls --color=tty'
-    colorls -G -d . &>/dev/null && alias ls='colorls -G'
-  elif [[ "$OSTYPE" == (darwin|freebsd)* ]]; then
-    # this is a good alias, it works by default just using $LSCOLORS
-    ls -G . &>/dev/null && alias ls='ls -G'
-
-    # only use coreutils ls if there is a dircolors customization present ($LS_COLORS or .dircolors file)
-    # otherwise, gls will use the default color scheme which is ugly af
-    [[ -n "$LS_COLORS" || -f "$HOME/.dircolors" ]] && gls --color -d . &>/dev/null && alias ls='gls --color=tty'
+# Default coloring for GNU-based ls
+if [[ -z "$LS_COLORS" ]]; then
+  # Define LS_COLORS via dircolors if available. Otherwise, set a default
+  # equivalent to LSCOLORS (generated via https://geoff.greer.fm/lscolors)
+  if (( $+commands[dircolors] )); then
+    [[ -f "$HOME/.dircolors" ]] \
+      && source <(dircolors -b "$HOME/.dircolors") \
+      || source <(dircolors -b)
   else
-    # For GNU ls, we use the default ls color theme. They can later be overwritten by themes.
-    if [[ -z "$LS_COLORS" ]]; then
-      (( $+commands[dircolors] )) && eval "$(dircolors -b)"
-    fi
-
-    ls --color -d . &>/dev/null && alias ls='ls --color=tty' || { ls -G . &>/dev/null && alias ls='ls -G' }
-
-    # Take advantage of $LS_COLORS for completion as well.
-    zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+    export LS_COLORS="di=1;36:ln=35:so=32:pi=33:ex=31:bd=34;46:cd=34;43:su=30;41:sg=30;46:tw=30;42:ow=30;43"
   fi
 fi
 
-# enable diff color if possible.
-if command diff --color /dev/null /dev/null &>/dev/null; then
-  function color-diff {
-    diff --color $@
-  }
-  alias diff="color-diff"
-  compdef _diff color-diff # compdef is already loaded by this point
-fi
+function test-ls-args {
+  local cmd="$1"          # ls, gls, colorls, ...
+  local args="${@[2,-1]}" # arguments except the first one
+  command "$cmd" "$args" /dev/null &>/dev/null
+}
 
-setopt auto_cd
-setopt multios
-setopt prompt_subst
+# Find the option for using colors in ls, depending on the version
+case "$OSTYPE" in
+  netbsd*)
+    # On NetBSD, test if `gls` (GNU ls) is installed (this one supports colors);
+    # otherwise, leave ls as is, because NetBSD's ls doesn't support -G
+    test-ls-args gls --color && alias ls='gls --color=tty'
+    ;;
+  openbsd*)
+    # On OpenBSD, `gls` (ls from GNU coreutils) and `colorls` (ls from base,
+    # with color and multibyte support) are available from ports.
+    # `colorls` will be installed on purpose and can't be pulled in by installing
+    # coreutils (which might be installed for ), so prefer it to `gls`.
+    test-ls-args gls --color && alias ls='gls --color=tty'
+    test-ls-args colorls -G && alias ls='colorls -G'
+    ;;
+  (darwin|freebsd)*)
+    # This alias works by default just using $LSCOLORS
+    test-ls-args ls -G && alias ls='ls -G'
+    # Only use GNU ls if installed and there are user defaults for $LS_COLORS,
+    # as the default coloring scheme is not very pretty
+    zstyle -t ':omz:lib:theme-and-appearance' gnu-ls \
+      && test-ls-args gls --color \
+      && alias ls='gls --color=tty'
+    ;;
+  *)
+    if test-ls-args ls --color; then
+      alias ls='ls --color=tty'
+    elif test-ls-args ls -G; then
+      alias ls='ls -G'
+    fi
+    ;;
+esac
 
-[[ -n "$WINDOW" ]] && SCREEN_NO="%B$WINDOW%b " || SCREEN_NO=""
-
-# git theming default: Variables for theming the git info prompt
-ZSH_THEME_GIT_PROMPT_PREFIX="git:("         # Prefix at the very beginning of the prompt, before the branch name
-ZSH_THEME_GIT_PROMPT_SUFFIX=")"             # At the very end of the prompt
-ZSH_THEME_GIT_PROMPT_DIRTY="*"              # Text to display if the branch is dirty
-ZSH_THEME_GIT_PROMPT_CLEAN=""               # Text to display if the branch is clean
-ZSH_THEME_RUBY_PROMPT_PREFIX="("
-ZSH_THEME_RUBY_PROMPT_SUFFIX=")"
+unfunction test-ls-args
 
 
 #
@@ -616,18 +674,18 @@ ZSH_THEME_RUBY_PROMPT_SUFFIX=")"
 #
 
 _fishy_collapsed_wd() {
-  local i wd
-  wd=("${(s:/:)PWD/#$HOME/~}")
-  if (( $#wd > 1 )); then
-    for i in {1..$(($#wd-1))}; do
-      if [[ "$wd[$i]" = .* ]]; then
-        wd[$i]="${${wd[$i]}[1,2]}"
+  local i pwd
+  pwd=("${(s:/:)PWD/#$HOME/~}")
+  if (( $#pwd > 1 )); then
+    for i in {1..$(($#pwd-1))}; do
+      if [[ "$pwd[$i]" = .* ]]; then
+        pwd[$i]="${${pwd[$i]}[1,2]}"
       else
-        wd[$i]="${${wd[$i]}[1]}"
+        pwd[$i]="${${pwd[$i]}[1]}"
       fi
     done
   fi
-  echo "${(j:/:)wd}"
+  echo "${(j:/:)pwd}"
 }
 
 user_color='cyan'; [ $UID -eq 0 ] && user_color='red';
