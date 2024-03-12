@@ -68,7 +68,7 @@ zstyle ':completion:*:*:*:users' ignored-patterns \
         adm amanda apache at avahi avahi-autoipd beaglidx bin cacti canna \
         clamav daemon dbus distcache dnsmasq dovecot fax ftp games gdm \
         gkrellmd gopher hacluster haldaemon halt hsqldb ident junkbust kdm \
-        ldap lp mail mailman mailnull man messagebus  mldonkey mysql nagios \
+        ldap lp mail mailman mailnull man messagebus mldonkey mysql nagios \
         named netdump news nfsnobody nobody nscd ntp nut nx obsrun openvpn \
         operator pcap polkitd postfix postgres privoxy pulse pvm quagga radvd \
         rpc rpcuser rpm rtkit scard shutdown squid sshd statd svn sync tftp \
@@ -224,19 +224,26 @@ if [[ -n "${terminfo[knp]}" ]]; then
 fi
 
 # Start typing + [Up-Arrow] - fuzzy find history forward
-if [[ -n "${terminfo[kcuu1]}" ]]; then
-  autoload -U up-line-or-beginning-search
-  zle -N up-line-or-beginning-search
+autoload -U up-line-or-beginning-search
+zle -N up-line-or-beginning-search
 
+bindkey -M emacs "^[[A" up-line-or-beginning-search
+bindkey -M viins "^[[A" up-line-or-beginning-search
+bindkey -M vicmd "^[[A" up-line-or-beginning-search
+if [[ -n "${terminfo[kcuu1]}" ]]; then
   bindkey -M emacs "${terminfo[kcuu1]}" up-line-or-beginning-search
   bindkey -M viins "${terminfo[kcuu1]}" up-line-or-beginning-search
   bindkey -M vicmd "${terminfo[kcuu1]}" up-line-or-beginning-search
 fi
-# Start typing + [Down-Arrow] - fuzzy find history backward
-if [[ -n "${terminfo[kcud1]}" ]]; then
-  autoload -U down-line-or-beginning-search
-  zle -N down-line-or-beginning-search
 
+# Start typing + [Down-Arrow] - fuzzy find history backward
+autoload -U down-line-or-beginning-search
+zle -N down-line-or-beginning-search
+
+bindkey -M emacs "^[[B" down-line-or-beginning-search
+bindkey -M viins "^[[B" down-line-or-beginning-search
+bindkey -M vicmd "^[[B" down-line-or-beginning-search
+if [[ -n "${terminfo[kcud1]}" ]]; then
   bindkey -M emacs "${terminfo[kcud1]}" down-line-or-beginning-search
   bindkey -M viins "${terminfo[kcud1]}" down-line-or-beginning-search
   bindkey -M vicmd "${terminfo[kcud1]}" down-line-or-beginning-search
@@ -355,8 +362,13 @@ setopt multios              # enable redirect to multiple streams: echo >file1 >
 setopt long_list_jobs       # show long list format job notifications
 setopt interactivecomments  # recognize comments
 
-env_default 'PAGER' 'less'
-env_default 'LESS' '-R'
+# define pager dependant on what is available (less or more)
+if (( ${+commands[less]} )); then
+  env_default 'PAGER' 'less'
+  env_default 'LESS' '-R'
+elif (( ${+commands[more]} )); then
+  env_default 'PAGER' 'more'
+fi
 
 ## super user alias
 alias _='sudo '
@@ -378,6 +390,7 @@ typeset -AHg FX FG BG
 FX=(
   reset     "%{[00m%}"
   bold      "%{[01m%}" no-bold      "%{[22m%}"
+  dim       "%{[02m%}" no-dim       "%{[22m%}"
   italic    "%{[03m%}" no-italic    "%{[23m%}"
   underline "%{[04m%}" no-underline "%{[24m%}"
   blink     "%{[05m%}" no-blink     "%{[25m%}"
@@ -431,7 +444,7 @@ function title {
   : ${2=$1}
 
   case "$TERM" in
-    cygwin|xterm*|putty*|rxvt*|konsole*|ansi|mlterm*|alacritty|st*|foot|contour*)
+    cygwin|xterm*|putty*|rxvt*|konsole*|ansi|mlterm*|alacritty|st*|foot*|contour*)
       print -Pn "\e]2;${2:q}\a" # set window name
       print -Pn "\e]1;${1:q}\a" # set tab name
       ;;
@@ -565,7 +578,7 @@ function omz_termsupport_cwd {
   URL_PATH="$(omz_urlencode -P $PWD)" || return 1
 
   # Konsole errors if the HOST is provided
-  [[ -z "$KONSOLE_VERSION" ]] || URL_HOST=""
+  [[ -z "$KONSOLE_PROFILE_NAME" && -z "$KONSOLE_DBUS_SESSION"  ]] || URL_HOST=""
 
   # common control sequence (OSC 7) to set current host and path
   printf "\e]7;file://%s%s\e\\" "${URL_HOST}" "${URL_PATH}"
