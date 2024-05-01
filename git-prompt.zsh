@@ -31,10 +31,14 @@ function git_prompt_info() {
   # If we are on a folder not tracked by git, get out.
   # Otherwise, check for hide-info at global and local repository level
   if ! __git_prompt_git rev-parse --git-dir &> /dev/null \
-     || [[ "$(__git_prompt_git config --get oh-my-zsh.hide-info 2>/dev/null)" == 1 ]]; then
+    || [[ "$(__git_prompt_git config --get oh-my-zsh.hide-info 2>/dev/null)" == 1 ]]; then
     return 0
   fi
 
+  # Get either:
+  # - the current branch name
+  # - the tag name if we are on a tag
+  # - the short SHA of the current commit
   local ref
   ref=$(__git_prompt_git symbolic-ref --short HEAD 2> /dev/null) \
   || ref=$(__git_prompt_git describe --tags --exact-match HEAD 2> /dev/null) \
