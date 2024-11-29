@@ -131,7 +131,7 @@ else
     }
 
     # Ignore these folders (if the necessary grep flags are available)
-    EXC_FOLDERS="{.bzr,CVS,.git,.hg,.svn,.idea,.tox}"
+    EXC_FOLDERS="{.bzr,CVS,.git,.hg,.svn,.idea,.tox,.venv,venv}"
 
     # Check for --exclude-dir, otherwise check for --exclude. If --exclude
     # isn't available, --color won't be either (they were released at the same
@@ -145,8 +145,8 @@ else
     if [[ -n "$GREP_OPTIONS" ]]; then
         # export grep, egrep and fgrep settings
         alias grep="grep $GREP_OPTIONS"
-        alias egrep="grep -E $GREP_OPTIONS"
-        alias fgrep="grep -F $GREP_OPTIONS"
+        alias egrep="grep -E"
+        alias fgrep="grep -F"
 
         # write to cache file if cache directory is writable
         if [[ -w "$ZSH_CACHE_DIR" ]]; then
@@ -169,14 +169,21 @@ unset __GREP_CACHE_FILE __GREP_ALIAS_CACHES
 ## History wrapper
 function omz_history {
   # parse arguments and remove from $@
-  local clear list stamp
+  local clear list stamp REPLY
   zparseopts -E -D c=clear l=list f=stamp E=stamp i=stamp t:=stamp
 
   if [[ -n "$clear" ]]; then
     # if -c provided, clobber the history file
-    echo -n >| "$HISTFILE"
+
+    # confirm action before deleting history
+    print -nu2 "This action will irreversibly delete your command history. Are you sure? [y/N] "
+    builtin read -E
+    [[ "$REPLY" = [yY] ]] || return 0
+
+    print -nu2 >| "$HISTFILE"
     fc -p "$HISTFILE"
-    echo >&2 History file deleted.
+
+    print -u2 History file deleted.
   elif [[ $# -eq 0 ]]; then
     # if no arguments provided, show full history starting from 1
     builtin fc $stamp -l 1
@@ -381,7 +388,7 @@ setopt multios              # enable redirect to multiple streams: echo >file1 >
 setopt long_list_jobs       # show long list format job notifications
 setopt interactivecomments  # recognize comments
 
-# define pager dependant on what is available (less or more)
+# define pager depending on what is available (less or more)
 if (( ${+commands[less]} )); then
   env_default 'PAGER' 'less'
   env_default 'LESS' '-R'
@@ -463,7 +470,7 @@ function title {
   : ${2=$1}
 
   case "$TERM" in
-    cygwin|xterm*|putty*|rxvt*|konsole*|ansi|mlterm*|alacritty|st*|foot*|contour*)
+    cygwin|xterm*|putty*|rxvt*|konsole*|ansi|mlterm*|alacritty*|st*|foot*|contour*)
       print -Pn "\e]2;${2:q}\a" # set window name
       print -Pn "\e]1;${1:q}\a" # set tab name
       ;;
@@ -575,7 +582,7 @@ fi
 # Don't define the function if we're in an unsupported terminal
 case "$TERM" in
   # all of these either process OSC 7 correctly or ignore entirely
-  xterm*|putty*|rxvt*|konsole*|mlterm*|alacritty|screen*|tmux*) ;;
+  xterm*|putty*|rxvt*|konsole*|mlterm*|alacritty*|screen*|tmux*) ;;
   contour*|foot*) ;;
   *)
     # Terminal.app and iTerm2 process OSC 7 correctly
