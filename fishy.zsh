@@ -210,7 +210,7 @@ esac
 ## History command configuration
 setopt extended_history       # record timestamp of command in HISTFILE
 setopt hist_expire_dups_first # delete duplicates first when HISTFILE size exceeds HISTSIZE
-setopt hist_ignore_dups       # ignore duplicated commands history list
+setopt hist_ignore_dups       # ignore sequential duplicated commands history list
 setopt hist_ignore_space      # ignore commands that start with space
 setopt hist_verify            # show command with history expansion to user before running it
 setopt share_history          # share command history data
@@ -598,6 +598,7 @@ esac
 # Identifies the directory using a file: URI scheme, including
 # the host name to disambiguate local vs. remote paths.
 function omz_termsupport_cwd {
+  setopt localoptions unset
   # Percent-encode the host and path names.
   local URL_HOST URL_PATH
   URL_HOST="$(omz_urlencode -P $HOST)" || return 1
