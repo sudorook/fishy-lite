@@ -186,10 +186,10 @@ function omz_history {
     print -u2 History file deleted.
   elif [[ $# -eq 0 ]]; then
     # if no arguments provided, show full history starting from 1
-    builtin fc $stamp -l 1
+    builtin fc "${stamp[@]}" -l 1
   else
     # otherwise, run `fc -l` with a custom format
-    builtin fc $stamp -l "$@"
+    builtin fc "${stamp[@]}" -l "$@"
   fi
 }
 
@@ -330,12 +330,12 @@ bindkey -M vicmd '^[[1;5D' backward-word
 
 
 bindkey '\ew' kill-region                             # [Esc-w] - Kill from the cursor to the mark
-bindkey -s '\el' 'ls\n'                               # [Esc-l] - run command: ls
+bindkey -s '\el' '^q ls\n'                            # [Esc-l] - run command: ls
 bindkey '^r' history-incremental-search-backward      # [Ctrl-r] - Search backward incrementally for a specified string. The string may begin with ^ to anchor the search to the beginning of the line.
 bindkey ' ' magic-space                               # [Space] - don't do history expansion
 
 
-# Edit the current command line in $EDITOR
+# Edit the current command line in $VISUAL (or $EDITOR / `vi` if not set)
 autoload -U edit-command-line
 zle -N edit-command-line
 bindkey '\C-x\C-e' edit-command-line
@@ -470,7 +470,7 @@ function title {
   : ${2=$1}
 
   case "$TERM" in
-    cygwin|xterm*|putty*|rxvt*|konsole*|ansi|mlterm*|alacritty*|st*|foot*|contour*)
+    cygwin|xterm*|putty*|rxvt*|konsole*|ansi|mlterm*|alacritty*|st*|foot*|contour*|wezterm*)
       print -Pn "\e]2;${2:q}\a" # set window name
       print -Pn "\e]1;${1:q}\a" # set tab name
       ;;
@@ -500,13 +500,13 @@ fi
 
 # Runs before showing the prompt
 function omz_termsupport_precmd {
-  [[ "${DISABLE_AUTO_TITLE:-}" != true ]] || return
+  [[ "${DISABLE_AUTO_TITLE:-}" != true ]] || return 0
   title "$ZSH_THEME_TERM_TAB_TITLE_IDLE" "$ZSH_THEME_TERM_TITLE_IDLE"
 }
 
 # Runs before executing the command
 function omz_termsupport_preexec {
-  [[ "${DISABLE_AUTO_TITLE:-}" != true ]] || return
+  [[ "${DISABLE_AUTO_TITLE:-}" != true ]] || return 0
 
   emulate -L zsh
   setopt extended_glob
