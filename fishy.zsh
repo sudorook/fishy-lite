@@ -77,7 +77,7 @@ fi
 # disable named-directories autocompletion
 zstyle ':completion:*:cd:*' tag-order local-directories directory-stack path-directories
 
-# Use caching so that commands like apt and dpkg complete are useable
+# Use caching so that commands like apt and dpkg complete are usable
 zstyle ':completion:*' use-cache yes
 zstyle ':completion:*' cache-path $ZSH_CACHE_DIR
 
@@ -663,9 +663,9 @@ if [[ -z "$LS_COLORS" ]]; then
 fi
 
 function test-ls-args {
-  local cmd="$1"          # ls, gls, colorls, ...
-  local args="${@[2,-1]}" # arguments except the first one
-  command "$cmd" "$args" /dev/null &>/dev/null
+  # Usage: test-ls-args cmd args...
+  # e.g. test-ls-args gls --color
+  command "$@" /dev/null &>/dev/null
 }
 
 # Find the option for using colors in ls, depending on the version
